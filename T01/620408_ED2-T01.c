@@ -617,11 +617,18 @@ void criar_iprimary(Ip *indice_primario, int* nregistros) {
 			//Gravar no final do iprimary
 			Ip *novoIndice = (Ip *) malloc(sizeof(Ip));
 			strcpy(novoIndice->pk, temp.pk);
-			novoIndice->rrn = (count * sizeof(Produto));
+			novoIndice->rrn = (count);
 			//printf("%s\n", temp.pk);
 			indice_primario[count] = *novoIndice;
 		}
 		ordernar_iprimary(indice_primario, nregistros);
+
+		/*
+			Debug do iprimary
+			for (count = 0; count < *nregistros; count++) {
+				printf("%s -> %d\n", indice_primario[count].pk, indice_primario[count].rrn);
+			}
+	*/
 	}
 }
 
