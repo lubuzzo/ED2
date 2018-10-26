@@ -134,9 +134,6 @@ float arredondamento(float preco, float desconto);
 
 /*
 		Função para inserir um novo Produto
-		Retorna:
-			* true -> para produto inserido com sucesso
-			* false -> para falha na inserção
 */
 void inserirProduto();
 
