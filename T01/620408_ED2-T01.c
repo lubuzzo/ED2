@@ -193,12 +193,23 @@ void gravarNoArquivo(Produto * prod, Ip *indice, int *num);
 /*
 		Função para comparação de dois valores da Struct
 */
-int ordenarStruct(const void *a, const void *b);
+int comparar_iprimary(const void *a, const void *b);
 
 /*
 		Função para ordernar o iprimary
 */
 void ordernar_iprimary(Ip *indice_primario, int* nregistros);
+
+/*
+		Função para comparar o indice primario com uma string
+*/
+int comparar_iprimary_str(const void *a, const void *b);
+
+/*
+		Função para busca binária no indice primario
+*/
+int bb_primaria(char *chave, Ip *indice, int *nregistros);
+
 
 /* ==========================================================================
  * ============================ FUNÇÃO PRINCIPAL ============================
@@ -226,6 +237,10 @@ int main(){
 	Ir *icategory = (Ir *) malloc (sizeof(Ir));
 	Isf *iprice = (Isf *) malloc (MAX_REGISTROS * sizeof(Isf));
 
+	/*
+		Debug to 9
+		int count = 0;
+	*/
 	/* Execução do programa */
 	int opcao = 0;
 	while(1)
@@ -277,6 +292,12 @@ int main(){
 				imprimirSecundario(iproduct, ibrand, icategory, iprice, nregistros, ncat);
 			break;
 			case 9:
+				/*
+					Debug 9
+					for (count = 0; count < nregistros; count++) {
+						printf("%s -> %d\n", iprimary[count].pk, iprimary[count].rrn);
+					}
+				*/
 	      		/*Liberar memória e finalizar o programa */
 				return 0;
 			break;
@@ -464,11 +485,23 @@ void inserirProduto(int *num, Ip *indice) {
 
 	gerarChave(prod);
 
-	gravarNoArquivo(prod, indice, num);
-	*num = *num + 1;
 
-	//Ordena o iprimary
-	ordernar_iprimary(indice, num);
+	if (bb_primaria(prod->pk, indice, num) == 1)
+		printf(ERRO_PK_REPETIDA, prod->pk);
+	else {
+		gravarNoArquivo(prod, indice, num);
+
+		//Gravar no final do iprimary
+		Ip *novoIndice = (Ip *) malloc(sizeof(Ip));
+		strcpy(novoIndice->pk, prod->pk);
+		//printf("%d\n", *num);
+		novoIndice->rrn = (*num);
+		indice[*num] = *novoIndice;
+		*num = *num + 1;
+
+		//Ordena o iprimary
+		ordernar_iprimary(indice, num);
+	}
 }
 
 void gravarNoArquivo(Produto * prod, Ip *indice, int *num) {
@@ -499,13 +532,6 @@ void gravarNoArquivo(Produto * prod, Ip *indice, int *num) {
 		sprintf(ARQUIVO+strlen(ARQUIVO), "#");
 		tamanho++;
 	}
-
-	//Gravar no final do iprimary
-	Ip *novoIndice = (Ip *) malloc(sizeof(Ip));
-	strcpy(novoIndice->pk, prod->pk);
-	novoIndice->rrn = (*num + 1);
-
-	indice[*num] = *novoIndice;
 }
 
 char *lerNomeProduto() {
@@ -632,14 +658,30 @@ void criar_iprimary(Ip *indice_primario, int* nregistros) {
 	}
 }
 
-void ordernar_iprimary(Ip *indice_primario, int* nregistros) {
-	if (*nregistros > 0)
-		qsort(indice_primario, *nregistros, sizeof(Ip), ordenarStruct);
+int bb_primaria(char *chave, Ip *indice, int *nregistros) {
+	Ip *resultado = (Ip *) bsearch(chave, indice, *nregistros, sizeof(indice[0]), comparar_iprimary_str);
+	if (resultado != NULL)
+		return 1;
+	return 0;
 }
 
-int ordenarStruct(const void *a, const void *b) {
-	Ip *ia = (Ip *)a;
-	Ip *ib = (Ip *)b;
+void ordernar_iprimary(Ip *indice_primario, int* nregistros) {
+	if (*nregistros > 0)
+		qsort(indice_primario, *nregistros, sizeof(Ip), comparar_iprimary);
+}
 
-	return strcmp(ia->pk, ib->pk);
+int comparar_iprimary(const void *a, const void *b) {
+	const Ip *ia = (Ip *)a;
+	const Ip *ib = (Ip *)b;
+	//printf("%s vs %s == %d\n", ia->pk, ib->pk, strcmp(ia->pk, ib->pk));
+	return strncmp(ia->pk, ib->pk, TAM_PRIMARY_KEY);
+}
+
+int comparar_iprimary_str(const void *a, const void *b) {
+	const char *ia = (char *)a;
+	const Ip *ib = (Ip *)b;
+
+	//printf("%s vs %s == %d\n", ia, ib->pk, strcmp(ia, ib->pk));
+
+	return strncmp(ia, ib->pk, TAM_PRIMARY_KEY);
 }
