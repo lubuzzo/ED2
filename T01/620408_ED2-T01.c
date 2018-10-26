@@ -185,6 +185,11 @@ char *lerDescontoProduto();
 */
 char *lerCategoriaProduto();
 
+/*
+		Recebe um Produto como parâmetro e grava no arquivo
+*/
+void gravarNoArquivo(Produto * prod);
+
 /* ==========================================================================
  * ============================ FUNÇÃO PRINCIPAL ============================
  * =============================== NÃO ALTERAR ============================== */
@@ -443,6 +448,38 @@ void inserirProduto() {
 	strcpy(prod->categoria, lerCategoriaProduto());
 
 	gerarChave(prod);
+
+	gravarNoArquivo(prod);
+}
+
+void gravarNoArquivo(Produto * prod) {
+	int tamanho = 0;
+
+	tamanho+=strlen(prod->nome);
+	sprintf(ARQUIVO+strlen(ARQUIVO), "%s", prod->nome);
+
+	tamanho+=(strlen(prod->marca)+1);
+	sprintf(ARQUIVO+strlen(ARQUIVO), "@%s", prod->marca);
+
+	tamanho+=(strlen(prod->data)+1);
+	sprintf(ARQUIVO+strlen(ARQUIVO), "@%s", prod->data);
+
+	tamanho+=(strlen(prod->ano)+1);
+	sprintf(ARQUIVO+strlen(ARQUIVO), "@%s", prod->ano);
+
+	tamanho+=(strlen(prod->preco)+1);
+	sprintf(ARQUIVO+strlen(ARQUIVO), "@%s", prod->preco);
+
+	tamanho+=(strlen(prod->desconto)+1);
+	sprintf(ARQUIVO+strlen(ARQUIVO), "@%s", prod->desconto);
+
+	tamanho+=(strlen(prod->categoria)+1);
+	sprintf(ARQUIVO+strlen(ARQUIVO), "@%s@", prod->categoria);
+
+	while (tamanho < 191) {
+		sprintf(ARQUIVO+strlen(ARQUIVO), "#");
+		tamanho++;
+	}
 }
 
 char *lerNomeProduto() {
