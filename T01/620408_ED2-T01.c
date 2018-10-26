@@ -195,6 +195,11 @@ void gravarNoArquivo(Produto * prod, Ip *indice, int *num);
 */
 int ordenarStruct(const void *a, const void *b);
 
+/*
+		Função para ordernar o iprimary
+*/
+void ordernar_iprimary(Ip *indice_primario, int* nregistros);
+
 /* ==========================================================================
  * ============================ FUNÇÃO PRINCIPAL ============================
  * =============================== NÃO ALTERAR ============================== */
@@ -204,7 +209,7 @@ int main(){
 	scanf("%d%*c", &carregarArquivo); /* 1 (sim) | 0 (nao) */
 	if (carregarArquivo)
 		nregistros = carregar_arquivo();
-
+	//printf("Num = %d\n", nregistros);
 	/* Índice primário */
 	Ip *iprimary = (Ip *) malloc (MAX_REGISTROS * sizeof(Ip));
 
@@ -462,14 +467,12 @@ void inserirProduto(int *num, Ip *indice) {
 	gravarNoArquivo(prod, indice, num);
 	*num = *num + 1;
 
-	//Recriar iprimary
-	criar_iprimary(indice, num);
+	//Ordena o iprimary
+	ordernar_iprimary(indice, num);
 }
 
 void gravarNoArquivo(Produto * prod, Ip *indice, int *num) {
 	int tamanho = 0;
-
-	int posicao = strlen(ARQUIVO);
 
 	tamanho+=strlen(prod->nome);
 	sprintf(ARQUIVO+strlen(ARQUIVO), "%s", prod->nome);
@@ -500,7 +503,7 @@ void gravarNoArquivo(Produto * prod, Ip *indice, int *num) {
 	//Gravar no final do iprimary
 	Ip *novoIndice = (Ip *) malloc(sizeof(Ip));
 	strcpy(novoIndice->pk, prod->pk);
-	novoIndice->rrn = posicao;
+	novoIndice->rrn = (*num + 1);
 
 	indice[*num] = *novoIndice;
 }
@@ -604,6 +607,25 @@ char *lerCategoriaProduto() {
 }
 
 void criar_iprimary(Ip *indice_primario, int* nregistros) {
+	//printf("Num = %d\n", *nregistros);
+	if (*nregistros > 0) {
+		int count = 0;
+		Produto temp;
+		for (; count < *nregistros; count++) {
+			temp = recuperar_registro(count);
+
+			//Gravar no final do iprimary
+			Ip *novoIndice = (Ip *) malloc(sizeof(Ip));
+			strcpy(novoIndice->pk, temp.pk);
+			novoIndice->rrn = (count * sizeof(Produto));
+			//printf("%s\n", temp.pk);
+			indice_primario[count] = *novoIndice;
+		}
+		ordernar_iprimary(indice_primario, nregistros);
+	}
+}
+
+void ordernar_iprimary(Ip *indice_primario, int* nregistros) {
 	if (*nregistros > 0)
 		qsort(indice_primario, *nregistros, sizeof(Ip), ordenarStruct);
 }
