@@ -135,7 +135,7 @@ float arredondamento(float preco, float desconto);
 /*
 		Função para inserir um novo Produto
 */
-void inserirProduto();
+void inserirProduto(int *num, Ip *indice);
 
 /*
 		Função para contar quantos registros há no ARQUIVO
@@ -188,7 +188,12 @@ char *lerCategoriaProduto();
 /*
 		Recebe um Produto como parâmetro e grava no arquivo
 */
-void gravarNoArquivo(Produto * prod);
+void gravarNoArquivo(Produto * prod, Ip *indice, int *num);
+
+/*
+		Função para comparação de dois valores da Struct
+*/
+int ordenarStruct(const void *a, const void *b);
 
 /* ==========================================================================
  * ============================ FUNÇÃO PRINCIPAL ============================
@@ -207,9 +212,14 @@ int main(){
 		perror(MEMORIA_INSUFICIENTE);
 		exit(1);
 	}
-	//criar_iprimary(iprimary, &nregistros);
+	criar_iprimary(iprimary, &nregistros);
 
 	/*Alocar e criar índices secundários*/
+
+	Is *iproduct = (Is *) malloc (MAX_REGISTROS * sizeof(Is));
+	Is *ibrand = (Is *) malloc (MAX_REGISTROS * sizeof(Is));
+	Ir *icategory = (Ir *) malloc (sizeof(Ir));
+	Isf *iprice = (Isf *) malloc (MAX_REGISTROS * sizeof(Isf));
 
 	/* Execução do programa */
 	int opcao = 0;
@@ -219,7 +229,7 @@ int main(){
 		switch(opcao)
 		{
 			case 1:
-				inserirProduto();
+				inserirProduto(&nregistros, iprimary);
 			break;
 			case 2:
 				/*alterar desconto*/
@@ -259,7 +269,7 @@ int main(){
 			break;
 			case 8:
 				/*imprime os índices secundários*/
-				//imprimirSecundario(iproduct, ibrand, icategory, iprice, nregistros, ncat);
+				imprimirSecundario(iproduct, ibrand, icategory, iprice, nregistros, ncat);
 			break;
 			case 9:
 	      		/*Liberar memória e finalizar o programa */
@@ -436,7 +446,7 @@ float arredondamento(float preco, float desconto) {
   return preco;
 }
 
-void inserirProduto() {
+void inserirProduto(int *num, Ip *indice) {
 	Produto *prod = (Produto *) malloc(sizeof(Produto));
 
 	strcpy(prod->nome, lerNomeProduto());
@@ -449,11 +459,17 @@ void inserirProduto() {
 
 	gerarChave(prod);
 
-	gravarNoArquivo(prod);
+	gravarNoArquivo(prod, indice, num);
+	*num = *num + 1;
+
+	//Recriar iprimary
+	criar_iprimary(indice, num);
 }
 
-void gravarNoArquivo(Produto * prod) {
+void gravarNoArquivo(Produto * prod, Ip *indice, int *num) {
 	int tamanho = 0;
+
+	int posicao = strlen(ARQUIVO);
 
 	tamanho+=strlen(prod->nome);
 	sprintf(ARQUIVO+strlen(ARQUIVO), "%s", prod->nome);
@@ -480,6 +496,13 @@ void gravarNoArquivo(Produto * prod) {
 		sprintf(ARQUIVO+strlen(ARQUIVO), "#");
 		tamanho++;
 	}
+
+	//Gravar no final do iprimary
+	Ip *novoIndice = (Ip *) malloc(sizeof(Ip));
+	strcpy(novoIndice->pk, prod->pk);
+	novoIndice->rrn = posicao;
+
+	indice[*num] = *novoIndice;
 }
 
 char *lerNomeProduto() {
@@ -578,4 +601,16 @@ char *lerCategoriaProduto() {
 	//categoria = getline(stdin);
 
 	return categoria;
+}
+
+void criar_iprimary(Ip *indice_primario, int* nregistros) {
+	if (*nregistros > 0)
+		qsort(indice_primario, *nregistros, sizeof(Ip), ordenarStruct);
+}
+
+int ordenarStruct(const void *a, const void *b) {
+	Ip *ia = (Ip *)a;
+	Ip *ib = (Ip *)b;
+
+	return strcmp(ia->pk, ib->pk);
 }
