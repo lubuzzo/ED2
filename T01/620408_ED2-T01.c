@@ -474,13 +474,10 @@ void gerarChave(Produto *prod) {
 	strcat(chave, chave_temp);
 
 	//GEMS1109
-	while (count < strlen(prod->data) && count < 5) {
-		if (strcmp(prod->data, "/") != 0)
-			chave_temp[4+count] = prod->data[count];
-		count++;
-	}
-
-	strcat(chave, chave_temp);
+	chave[4] = prod->data[0];
+	chave[5] = prod->data[1];
+	chave[6] = prod->data[3];
+	chave[7] = prod->data[4];
 
 	//GEMS110917
 	strncpy(chave_temp, prod->ano, 2);
