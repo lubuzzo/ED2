@@ -135,7 +135,7 @@ float arredondamento(float preco, float desconto);
 /*
 		Função para inserir um novo Produto
 */
-void inserirProduto(int *num, Ip *indice);
+void inserirProduto(int *num, Ip *indice, Is *iproduct, Is *ibrand);
 
 /*
 		Função para contar quantos registros há no ARQUIVO
@@ -198,7 +198,7 @@ int comparar_iprimary(const void *a, const void *b);
 /*
 		Função para ordernar o iprimary
 */
-void ordernar_iprimary(Ip *indice_primario, int* nregistros);
+void ordenar_iprimary(Ip *indice_primario, int* nregistros);
 
 /*
 		Função para comparar o indice primario com uma string
@@ -210,6 +210,30 @@ int comparar_iprimary_str(const void *a, const void *b);
 */
 Ip *bb_primaria(char *chave, Ip *indice, int *nregistros);
 
+/*
+		Funcção para comparar os indices secundarios
+*/
+int comparar_secondary(const void *a, const void *b);
+
+/*
+		Função para ordernar o iproduct
+*/
+void ordenar_secondary(Is *secondary, int *nregistros, int caso);
+
+/*
+		Função para criar indice secundário
+*/
+void criar_secondary(Is *secondary, int *nregistros, int caso);
+
+/*
+		Função para adicionar produto ao iprimary
+*/
+void addIprimary(Produto *prod, Ip *indice, int num);
+
+/*
+		Função para adicionar produto ao isecondary
+*/
+void addSecondary(Produto *prod, Is *indice, int caso, int num);
 
 /* ==========================================================================
  * ============================ FUNÇÃO PRINCIPAL ============================
@@ -233,7 +257,13 @@ int main(){
 	/*Alocar e criar índices secundários*/
 
 	Is *iproduct = (Is *) malloc (MAX_REGISTROS * sizeof(Is));
+	if (carregarArquivo)
+		criar_secondary(iproduct, &nregistros, 0);
+
 	Is *ibrand = (Is *) malloc (MAX_REGISTROS * sizeof(Is));
+	if (carregarArquivo)
+		criar_secondary(ibrand, &nregistros, 1);
+
 	Ir *icategory = (Ir *) malloc (sizeof(Ir));
 	Isf *iprice = (Isf *) malloc (MAX_REGISTROS * sizeof(Isf));
 
@@ -249,7 +279,7 @@ int main(){
 		switch(opcao)
 		{
 			case 1:
-				inserirProduto(&nregistros, iprimary);
+				inserirProduto(&nregistros, iprimary, iproduct, ibrand);
 			break;
 			case 2:
 				/*alterar desconto*/
@@ -472,7 +502,7 @@ float arredondamento(float preco, float desconto) {
   return preco;
 }
 
-void inserirProduto(int *num, Ip *indice) {
+void inserirProduto(int *num, Ip *indice, Is *iproduct, Is *ibrand) {
 	Produto *prod = (Produto *) malloc(sizeof(Produto));
 
 	strcpy(prod->nome, lerNomeProduto());
@@ -486,22 +516,45 @@ void inserirProduto(int *num, Ip *indice) {
 	gerarChave(prod);
 
 
-	if (bb_primaria(prod->pk, indice, num) == NULL)
+	if (bb_primaria(prod->pk, indice, num) != NULL)
 		printf(ERRO_PK_REPETIDA, prod->pk);
 	else {
 		gravarNoArquivo(prod, indice, num);
 
-		//Gravar no final do iprimary
-		Ip *novoIndice = (Ip *) malloc(sizeof(Ip));
-		strcpy(novoIndice->pk, prod->pk);
-		//printf("%d\n", *num);
-		novoIndice->rrn = (*num);
-		indice[*num] = *novoIndice;
+		addIprimary(prod, indice, *num);
+		addSecondary(prod, iproduct, 0, *num);
+		addSecondary(prod, ibrand, 1, *num);
+
 		*num = *num + 1;
 
 		//Ordena o iprimary
-		ordernar_iprimary(indice, num);
+		ordenar_iprimary(indice, num);
+
+		ordenar_secondary(iproduct, num, 0);
+		ordenar_secondary(ibrand, num, 1);
 	}
+}
+
+void addIprimary(Produto *prod, Ip *indice, int num) {
+	//Gravar no final do iprimary
+	Ip *novoIndice = (Ip *) malloc(sizeof(Ip));
+	strcpy(novoIndice->pk, prod->pk);
+	//printf("%d\n", *num);
+	novoIndice->rrn = (num);
+	indice[num] = *novoIndice;
+}
+
+void addSecondary(Produto *prod, Is *indice, int caso, int num) {
+	//Gravar no final do isecondary
+	Is *novoIndice = (Is *) malloc(sizeof(Is));
+	if (caso == 0)
+		strcpy(novoIndice->string, prod->nome);
+	else if (caso == 1)
+		strcpy(novoIndice->string, prod->marca);
+
+	strcpy(novoIndice->pk, prod->pk);
+
+	indice[num] = *novoIndice;
 }
 
 void gravarNoArquivo(Produto * prod, Ip *indice, int *num) {
@@ -647,7 +700,7 @@ void criar_iprimary(Ip *indice_primario, int* nregistros) {
 			//printf("%s\n", temp.pk);
 			indice_primario[count] = *novoIndice;
 		}
-		ordernar_iprimary(indice_primario, nregistros);
+		ordenar_iprimary(indice_primario, nregistros);
 
 		/*
 			Debug do iprimary
@@ -662,7 +715,7 @@ Ip *bb_primaria(char *chave, Ip *indice, int *nregistros) {
 	return (Ip *) bsearch(chave, indice, *nregistros, sizeof(indice[0]), comparar_iprimary_str);
 }
 
-void ordernar_iprimary(Ip *indice_primario, int* nregistros) {
+void ordenar_iprimary(Ip *indice_primario, int* nregistros) {
 	if (*nregistros > 0)
 		qsort(indice_primario, *nregistros, sizeof(Ip), comparar_iprimary);
 }
@@ -681,4 +734,55 @@ int comparar_iprimary_str(const void *a, const void *b) {
 	//printf("%s vs %s == %d\n", ia, ib->pk, strcmp(ia, ib->pk));
 
 	return strncmp(ia, ib->pk, TAM_PRIMARY_KEY);
+}
+
+void ordenar_secondary(Is *secondary, int* nregistros, int caso) {
+	if (*nregistros > 0)
+		qsort(secondary, *nregistros, sizeof(Is), comparar_secondary);
+}
+
+int comparar_secondary(const void *a, const void *b) {
+	const Is *ia = (Is *)a;
+	const Is *ib = (Is *)b;
+	//printf("%s vs %s == %d\n", ia->pk, ib->pk, strcmp(ia->pk, ib->pk));
+	int retorno = strncmp(ia->string, ib->string, TAM_NOME);
+
+	if (retorno == 0)
+		return strncmp(ia->pk, ib->pk, TAM_PRIMARY_KEY);
+	return retorno;
+}
+
+void criar_secondary(Is *secondary, int *nregistros, int caso) {
+	if (*nregistros > 0) {
+		int count = 0;
+		Produto temp;
+
+		if (caso == 0) {
+		//iproduct
+			for (; count < *nregistros; count++) {
+				temp = recuperar_registro(count);
+
+				//Gravar no final do iproduct
+				Is *novoIndice = (Is *) malloc(sizeof(Is));
+				strcpy(novoIndice->string, temp.nome);
+				strcpy(novoIndice->pk, temp.pk);
+				printf("%s\n", temp.pk);
+				secondary[count] = *novoIndice;
+			}
+			ordenar_secondary(secondary, nregistros, 0);
+		} else if (caso == 1) {
+			//ibrand
+			for (; count < *nregistros; count++) {
+				temp = recuperar_registro(count);
+
+				//Gravar no final do iproduct
+				Is *novoIndice = (Is *) malloc(sizeof(Is));
+				strcpy(novoIndice->string, temp.marca);
+				strcpy(novoIndice->pk, temp.pk);
+				//printf("%s\n", temp.pk);
+				secondary[count] = *novoIndice;
+			}
+			ordenar_secondary(secondary, nregistros, 1);
+		}
+	}
 }
