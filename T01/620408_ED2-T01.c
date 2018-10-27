@@ -766,7 +766,7 @@ void criar_secondary(Is *secondary, int *nregistros, int caso) {
 				Is *novoIndice = (Is *) malloc(sizeof(Is));
 				strcpy(novoIndice->string, temp.nome);
 				strcpy(novoIndice->pk, temp.pk);
-				printf("%s\n", temp.pk);
+				//printf("%s\n", temp.pk);
 				secondary[count] = *novoIndice;
 			}
 			ordenar_secondary(secondary, nregistros, 0);
