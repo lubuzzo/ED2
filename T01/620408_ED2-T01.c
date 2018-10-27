@@ -208,7 +208,7 @@ int comparar_iprimary_str(const void *a, const void *b);
 /*
 		Função para busca binária no indice primario
 */
-int bb_primaria(char *chave, Ip *indice, int *nregistros);
+Ip *bb_primaria(char *chave, Ip *indice, int *nregistros);
 
 
 /* ==========================================================================
@@ -486,7 +486,7 @@ void inserirProduto(int *num, Ip *indice) {
 	gerarChave(prod);
 
 
-	if (bb_primaria(prod->pk, indice, num) == 1)
+	if (bb_primaria(prod->pk, indice, num) == NULL)
 		printf(ERRO_PK_REPETIDA, prod->pk);
 	else {
 		gravarNoArquivo(prod, indice, num);
@@ -658,11 +658,8 @@ void criar_iprimary(Ip *indice_primario, int* nregistros) {
 	}
 }
 
-int bb_primaria(char *chave, Ip *indice, int *nregistros) {
-	Ip *resultado = (Ip *) bsearch(chave, indice, *nregistros, sizeof(indice[0]), comparar_iprimary_str);
-	if (resultado != NULL)
-		return 1;
-	return 0;
+Ip *bb_primaria(char *chave, Ip *indice, int *nregistros) {
+	return (Ip *) bsearch(chave, indice, *nregistros, sizeof(indice[0]), comparar_iprimary_str);
 }
 
 void ordernar_iprimary(Ip *indice_primario, int* nregistros) {
