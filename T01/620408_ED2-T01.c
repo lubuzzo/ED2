@@ -775,7 +775,7 @@ void criar_secondary(Is *secondary, int *nregistros, int caso) {
 			for (; count < *nregistros; count++) {
 				temp = recuperar_registro(count);
 
-				//Gravar no final do iproduct
+				//Gravar no final do ibrand
 				Is *novoIndice = (Is *) malloc(sizeof(Is));
 				strcpy(novoIndice->string, temp.marca);
 				strcpy(novoIndice->pk, temp.pk);
