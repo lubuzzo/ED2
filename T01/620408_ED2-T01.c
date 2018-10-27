@@ -211,7 +211,7 @@ int comparar_iprimary_str(const void *a, const void *b);
 Ip *bb_primaria(char *chave, Ip *indice, int *nregistros);
 
 /*
-		Funcção para comparar os indices secundarios
+		Função para comparar os indices secundarios
 */
 int comparar_secondary(const void *a, const void *b);
 
@@ -235,10 +235,8 @@ void addIprimary(Produto *prod, Ip *indice, int num);
 */
 void addSecondary(Produto *prod, Is *indice, int caso, int num);
 
-
-
 /*
-		Funcção para comparar os indices secundarios (iprice)
+		Função para comparar os indices secundarios (iprice)
 */
 int comparar_secondary_price(const void *a, const void *b);
 
