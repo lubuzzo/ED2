@@ -135,7 +135,7 @@ float arredondamento(float preco, float desconto);
 /*
 		Função para inserir um novo Produto
 */
-void inserirProduto(int *num, Ip *indice, Is *iproduct, Is *ibrand);
+void inserirProduto(int *num, Ip *indice, Is *iproduct, Is *ibrand, Isf *iprice);
 
 /*
 		Função para contar quantos registros há no ARQUIVO
@@ -235,6 +235,28 @@ void addIprimary(Produto *prod, Ip *indice, int num);
 */
 void addSecondary(Produto *prod, Is *indice, int caso, int num);
 
+
+
+/*
+		Funcção para comparar os indices secundarios (iprice)
+*/
+int comparar_secondary_price(const void *a, const void *b);
+
+/*
+		Função para ordernar o iproduct
+*/
+void ordenar_secondary_price(Isf *secondary, int *nregistros);
+
+/*
+		Função para criar indice secundário (iprice)
+*/
+void criar_secondary_price(Isf *secondary, int *nregistros);
+
+/*
+		Função para adicionar produto ao isecondary (iprice)
+*/
+void addSecondary_price(Produto *prod, Isf *indice, int num);
+
 /* ==========================================================================
  * ============================ FUNÇÃO PRINCIPAL ============================
  * =============================== NÃO ALTERAR ============================== */
@@ -266,6 +288,8 @@ int main(){
 
 	Ir *icategory = (Ir *) malloc (sizeof(Ir));
 	Isf *iprice = (Isf *) malloc (MAX_REGISTROS * sizeof(Isf));
+	if (carregarArquivo)
+		criar_secondary_price(iprice, &nregistros);
 
 	/*
 		Debug to 9
@@ -279,7 +303,7 @@ int main(){
 		switch(opcao)
 		{
 			case 1:
-				inserirProduto(&nregistros, iprimary, iproduct, ibrand);
+				inserirProduto(&nregistros, iprimary, iproduct, ibrand, iprice);
 			break;
 			case 2:
 				/*alterar desconto*/
@@ -499,7 +523,7 @@ float arredondamento(float preco, float desconto) {
   return preco;
 }
 
-void inserirProduto(int *num, Ip *indice, Is *iproduct, Is *ibrand) {
+void inserirProduto(int *num, Ip *indice, Is *iproduct, Is *ibrand, Isf *iprice) {
 	Produto *prod = (Produto *) malloc(sizeof(Produto));
 
 	strcpy(prod->nome, lerNomeProduto());
@@ -521,6 +545,7 @@ void inserirProduto(int *num, Ip *indice, Is *iproduct, Is *ibrand) {
 		addIprimary(prod, indice, *num);
 		addSecondary(prod, iproduct, 0, *num);
 		addSecondary(prod, ibrand, 1, *num);
+		addSecondary_price(prod, iprice, *num);
 
 		*num = *num + 1;
 
@@ -529,6 +554,7 @@ void inserirProduto(int *num, Ip *indice, Is *iproduct, Is *ibrand) {
 
 		ordenar_secondary(iproduct, num, 0);
 		ordenar_secondary(ibrand, num, 1);
+		ordenar_secondary_price(iprice, num);
 	}
 }
 
@@ -782,4 +808,44 @@ void criar_secondary(Is *secondary, int *nregistros, int caso) {
 			ordenar_secondary(secondary, nregistros, 1);
 		}
 	}
+}
+
+int comparar_secondary_price(const void *a, const void *b) {
+	const Isf *ia = (Isf *)a;
+	const Isf *ib = (Isf *)b;
+
+	return (ia->price - ib->price);
+}
+
+void ordenar_secondary_price(Isf *secondary, int *nregistros) {
+	if (*nregistros > 0)
+		qsort(secondary, *nregistros, sizeof(Isf), comparar_secondary_price);
+}
+
+void criar_secondary_price(Isf *secondary, int *nregistros){
+	if (*nregistros > 0) {
+		int count = 0;
+		Produto temp;
+
+		for (; count < *nregistros; count++) {
+			temp = recuperar_registro(count);
+
+			//Gravar no final do iprice
+			Isf *novoIndice = (Isf *) malloc(sizeof(Isf));
+			novoIndice->price = (arredondamento((float) strtof(temp.preco, NULL), (float) strtof(temp.desconto, NULL)));
+			strcpy(novoIndice->pk, temp.pk);
+			//printf("%s\n", temp.pk);
+			secondary[count] = *novoIndice;
+		}
+		ordenar_secondary_price(secondary, nregistros);
+	}
+}
+
+void addSecondary_price(Produto *prod, Isf *indice, int num) {
+	//Gravar no final do iprice
+	Isf *novoIndice = (Isf *) malloc(sizeof(Isf));
+	novoIndice->price = (arredondamento((float) strtof(prod->preco, NULL), (float) strtof(prod->desconto, NULL)));
+	strcpy(novoIndice->pk, prod->pk);
+
+	indice[num] = *novoIndice;
 }
