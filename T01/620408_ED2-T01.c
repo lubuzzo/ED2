@@ -294,6 +294,11 @@ ll* SortedMerge(ll* a, ll* b);
 */
 int addSecondary_cat(Produto *prod, Ir *indice, int numCategorias);
 
+/*
+		Função para alterar um produto
+*/
+int alterar(Ip *iprimary, int nregistros, Isf *iprice);
+
 /* ==========================================================================
  * ============================ FUNÇÃO PRINCIPAL ============================
  * =============================== NÃO ALTERAR ============================== */
@@ -348,12 +353,10 @@ int main(){
 			case 2:
 				/*alterar desconto*/
 				printf(INICIO_ALTERACAO);
-				/*
-				if(alterar([args]))
+				if (alterar(iprimary, nregistros, iprice) == 1)
 					printf(SUCESSO);
-				else
+				else if (alterar == 0)
 					printf(FALHA);
-				*/
 			break;
 			case 3:
 				/*excluir produto*/
@@ -1090,4 +1093,47 @@ void MergeSort(ll** head) {
 	MergeSort(&b);
 
 	*head = SortedMerge(a, b);
+}
+
+
+int alterar(Ip *iprimary, int nregistros, Isf *iprice) {
+	char *chavinha = (char *) malloc(TAM_PRIMARY_KEY * sizeof(char));
+
+	char *descontinho = (char *) malloc(TAM_DESCONTO * sizeof(char));
+
+	char *ch = (char *) malloc(sizeof(char));
+
+	while ((*ch = getchar()) != '\n') {
+		strcat(chavinha, ch);
+	}
+
+	Ip * indice = bb_primaria(chavinha, iprimary, &nregistros);
+
+	if (indice == NULL) {
+		printf(REGISTRO_N_ENCONTRADO);
+		return -1;
+	}
+	int rrn = indice->rrn;
+	Produto prod = recuperar_registro(rrn);
+
+	do {
+		strcpy(descontinho, "");
+		while ((*ch = getchar()) != '\n') {
+			strcat(descontinho, ch);
+		}
+		if (strlen(descontinho) < 3 || (strtol(descontinho, NULL, 10) > 100) || (strtol(descontinho, NULL, 10) < 0)) {
+			printf(CAMPO_INVALIDO);
+			strcpy(descontinho, "");
+		}
+	} while (strlen(descontinho) < 3 || (strtol(descontinho, NULL, 10) > 100) || (strtol(descontinho, NULL, 10) < 0)) ;
+
+	if (&prod != NULL) {
+		int movimentacao = ((192 * rrn) + strlen(prod.nome) + strlen(prod.marca) + strlen(prod.data) + strlen(prod.ano) + strlen(prod.preco) + 5);
+		char *p = ARQUIVO + movimentacao;
+		sprintf(p, "%s", descontinho);
+		ARQUIVO[movimentacao+3] = '@';
+		criar_secondary_price(iprice, &nregistros);
+		return 1;
+	}
+	return 0;
 }
