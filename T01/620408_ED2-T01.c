@@ -304,6 +304,21 @@ int alterar(Ip *iprimary, int nregistros, Isf *iprice);
 */
 int remover(Ip *iprimary, int *nregistros);
 
+/*
+		Função para comparar um indice secundário com string
+*/
+int comparar_secondary_str(const void *a, const void *b);
+
+/*
+		Função para buscar nos indices secundários
+*/
+Is *bb_secundario(char *chave, Is *indice, int *nregistros);
+
+/*
+		Função para buscar um produto
+*/
+void buscar(Ip *iprimary, Is *iproduct, Is *ibrand, Ir *icategory, int *nregistros, int numcat);
+
 /* ==========================================================================
  * ============================ FUNÇÃO PRINCIPAL ============================
  * =============================== NÃO ALTERAR ============================== */
@@ -347,6 +362,7 @@ int main(){
 	*/
 	/* Execução do programa */
 	int opcao = 0;
+	int resultado = 0;
 	while(1)
 	{
 		scanf("%d%*c", &opcao);
@@ -358,22 +374,25 @@ int main(){
 			case 2:
 				/*alterar desconto*/
 				printf(INICIO_ALTERACAO);
-				if (alterar(iprimary, nregistros, iprice) == 1)
+				resultado = (alterar(iprimary, nregistros, iprice) == 1);
+				if (resultado == 1)
 					printf(SUCESSO);
-				else if (alterar == 0)
+				else if (resultado == 0)
 					printf(FALHA);
 			break;
 			case 3:
 				/*excluir produto*/
 				printf(INICIO_EXCLUSAO);
-				if(remover(iprimary, &nregistros))
+				resultado = remover(iprimary, &nregistros);
+				if(resultado == 1)
 					printf(SUCESSO);
-				else
+				else if (resultado == 0)
 					printf(FALHA);
 			break;
 			case 4:
 				/*busca*/
 				printf(INICIO_BUSCA);
+				buscar(iprimary, iproduct, ibrand, icategory, &nregistros, ncat);
 			break;
 			case 5:
 				/*listagens*/
@@ -783,6 +802,10 @@ void criar_iprimary(Ip *indice_primario, int* nregistros) {
 	}
 }
 
+Is *bb_secundario(char *chave, Is *indice, int *nregistros) {
+	return (Is *) bsearch(chave, indice, *nregistros, sizeof(indice[0]), comparar_secondary_str);
+}
+
 Ip *bb_primaria(char *chave, Ip *indice, int *nregistros) {
 	return (Ip *) bsearch(chave, indice, *nregistros, sizeof(indice[0]), comparar_iprimary_str);
 }
@@ -822,6 +845,13 @@ int comparar_secondary(const void *a, const void *b) {
 	if (retorno == 0)
 		return strncmp(ia->pk, ib->pk, TAM_PRIMARY_KEY);
 	return retorno;
+}
+
+int comparar_secondary_str(const void *a, const void *b) {
+	const char *ia = (char *)a;
+	const Is *ib = (Is *)b;
+	//printf("%s vs %s == %d\n", ia->pk, ib->pk, strcmp(ia->pk, ib->pk));
+	int retorno = strncmp(ia, ib->string, TAM_NOME);
 }
 
 void criar_secondary(Is *secondary, int *nregistros, int caso) {
@@ -1167,7 +1197,196 @@ int remover(Ip *iprimary, int *nregistros) {
 		strcpy(indice->pk, "-1");
 		*nregistros--;
 		//TODO: Recriar todos os indices
+
+		ordenar_iprimary(iprimary, nregistros);
+
 		return 1;
 	}
 	return 0;
+}
+
+void buscar(Ip *iprimary, Is *iproduct, Is *ibrand, Ir *icategory, int *nregistros, int ncat) {
+	int opPrint = 0;
+	ll *aux;
+	char codProduto[TAM_PRIMARY_KEY];
+	char tempCodigo[TAM_PRIMARY_KEY];
+
+	char nomeProduto[TAM_NOME];
+	char tempNome[TAM_NOME];
+
+	char marcaProduto[TAM_MARCA];
+	char tempMarca[TAM_MARCA];
+
+	char categoriaProduto[TAM_CATEGORIA];
+	char tempCategoria[TAM_CATEGORIA];
+
+	char *ch = (char *) malloc(sizeof(char));
+
+	scanf("%d%*c", &opPrint);
+
+	int count = 0, count2 = 0;
+	Ip *busca;
+	Is *buscaParcial;
+
+	Ir *buscaParcialMarca;
+
+	Produto resultados[MAX_REGISTROS];
+	int numResultados = 0;
+
+	switch (opPrint) {
+		//TODO: não imprimir os removidos (pk == 1)
+		case 1:
+
+			while ((*ch = getchar()) != '\n') {
+				strcat(tempCodigo, ch);
+			}
+
+			strcpy(codProduto, tempCodigo);
+
+			busca = bb_primaria(codProduto, iprimary, nregistros);
+
+			if (busca == NULL) {
+				printf(REGISTRO_N_ENCONTRADO);
+				return;
+			} else {
+				Produto prod = recuperar_registro(busca->rrn);
+
+				printf("%s\n", prod.pk);
+				printf("%s\n", prod.nome);
+				printf("%s\n", prod.marca);
+				printf("%s\n", prod.data);
+				//printf("%s\n", prod.ano);
+				printf("%s\n", prod.preco);
+				printf("%s\n", prod.desconto);
+
+				char categoria[TAM_CATEGORIA];
+				strcpy(categoria, prod.categoria);
+
+				for (count = 0; count < strlen(prod.categoria); count++) {
+					if (prod.categoria[count] == '|')
+						printf(", ");
+					else
+						printf("%c", prod.categoria[count]);
+				}
+				printf("\n");
+
+			}
+			return;
+
+			break;
+		case 2:
+			//TODO: quando há mais que um produto com o mesmo nome
+			strcpy(tempNome, "");
+			while ((*ch = getchar()) != '\n') {
+				strcat(tempNome, ch);
+			}
+
+			strcpy(nomeProduto, tempNome);
+
+			buscaParcial = bb_secundario(nomeProduto, iproduct, nregistros);
+			if (buscaParcial == NULL)	{
+				printf(REGISTRO_N_ENCONTRADO);
+				return;
+			} else {
+				busca = bb_primaria(buscaParcial->pk, iprimary, nregistros);
+				if (busca == NULL) {
+					printf(REGISTRO_N_ENCONTRADO);
+					return;
+				} else {
+					Produto prod = recuperar_registro(busca->rrn);
+
+					printf("%s\n", prod.pk);
+					printf("%s\n", prod.nome);
+					printf("%s\n", prod.marca);
+					printf("%s\n", prod.data);
+					//printf("%s\n", prod.ano);
+					printf("%s\n", prod.preco);
+					printf("%s\n", prod.desconto);
+
+					char categoria[TAM_CATEGORIA];
+					strcpy(categoria, prod.categoria);
+
+					for (count = 0; count < strlen(prod.categoria); count++) {
+						if (prod.categoria[count] == '|')
+							printf(", ");
+						else
+							printf("%c", prod.categoria[count]);
+					}
+					printf("\n");
+				}
+				return;
+			}
+
+			break;
+		case 3:
+			strcpy(tempMarca, "");
+			while ((*ch = getchar()) != '\n') {
+				strcat(tempMarca, ch);
+			}
+
+			strcpy(marcaProduto, tempMarca);
+
+			//categoria
+			strcpy(tempCategoria, "");
+			while ((*ch = getchar()) != '\n') {
+				strcat(tempCategoria, ch);
+			}
+
+			strcpy(categoriaProduto, tempCategoria);
+
+			//Busca pela marca
+			for (count = 0; count < *nregistros; count++) {
+				if (strcmp(ibrand[count].string, marcaProduto) == 0) {
+					resultados[numResultados] = recuperar_registro(bb_primaria(ibrand[count].pk, iprimary, nregistros)->rrn);
+					numResultados++;
+					//printf("achei\n");
+				}
+			}
+
+			if (numResultados == 0) {
+				printf(REGISTRO_N_ENCONTRADO);
+				return;
+			} else {
+
+				//Busca binária para achar a categoria
+				buscaParcialMarca = bb_categoria(tempCategoria, icategory, &ncat);
+				if (buscaParcialMarca == NULL) {
+					printf(REGISTRO_N_ENCONTRADO);
+					return;
+				} else {
+					//printf("%s", buscaParcialMarca->cat);
+
+					aux =  buscaParcialMarca->lista;
+					while(aux != NULL){
+						for (count = 0; count < numResultados; count++) {
+							if (strcmp(resultados[count].pk, aux->pk) == 0) {
+								printf("%s\n", resultados[count].pk);
+								printf("%s\n", resultados[count].nome);
+								printf("%s\n", resultados[count].marca);
+								printf("%s\n", resultados[count].data);
+								//printf("%s\n", prod.ano);
+								printf("%s\n", resultados[count].preco);
+								printf("%s\n", resultados[count].desconto);
+
+								char categoria2[TAM_CATEGORIA];
+								strcpy(categoria2, resultados[count].categoria);
+
+								for (count2 = 0; count2 < strlen(resultados[count].categoria); count2++) {
+									if (resultados[count].categoria[count2] == '|')
+										printf(", ");
+									else
+										printf("%c", resultados[count].categoria[count2]);
+								}
+								printf("\n");
+							}
+						}
+						aux = aux->prox;
+					}
+				}
+
+			}
+			return;
+
+			break;
+	}
 }
