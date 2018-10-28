@@ -269,7 +269,7 @@ int comparar_categoria_str(const void *a, const void *b);
 		Função para criar o icategory
 		retorna o número de categorias
 */
-int criar_secondary_cat(Ir *secondary, int *nregistros);
+int criar_secondary_cat(Ir *secondary, int *nregistros, int ncat);
 
 /*
 		Função para ordenar icategory
@@ -324,6 +324,11 @@ void buscar(Ip *iprimary, Is *iproduct, Is *ibrand, Ir *icategory, int *nregistr
 */
 void listagem(Ip *iprimary, Ir *icategory, Is *ibrand, Isf *iprice, int *nregistros, int ncat);
 
+
+/*
+		Função para excluir definitivamente (hahahaha) os produtos
+*/
+void liberarEspaco(Ip *iprimary, Ir *icategory, Is *ibrand, Isf *iprice, Is *iproduct, int *nregistros, int ncat);
 /* ==========================================================================
  * ============================ FUNÇÃO PRINCIPAL ============================
  * =============================== NÃO ALTERAR ============================== */
@@ -355,7 +360,7 @@ int main(){
 
 	Ir *icategory = (Ir *) malloc (MAX_REGISTROS * sizeof(Ir));
 	if (carregarArquivo)
-		ncat = criar_secondary_cat(icategory, &nregistros);
+		ncat = criar_secondary_cat(icategory, &nregistros, ncat);
 
 	Isf *iprice = (Isf *) malloc (MAX_REGISTROS * sizeof(Isf));
 	if (carregarArquivo)
@@ -406,6 +411,7 @@ int main(){
 			break;
 			case 6:
 				/*libera espaço*/
+				liberarEspaco(iprimary, icategory, ibrand, iprice, iproduct, &nregistros, ncat);
 			break;
 			case 7:
 				/*imprime o arquivo de dados*/
@@ -417,13 +423,11 @@ int main(){
 				imprimirSecundario(iproduct, ibrand, icategory, iprice, nregistros, ncat);
 			break;
 			case 9:
-				/*
-					Debug 9
-					for (count = 0; count < nregistros; count++) {
-						printf("%s -> %d\n", iprimary[count].pk, iprimary[count].rrn);
-					}
-				*/
-	      		/*Liberar memória e finalizar o programa */
+      		/*Liberar memória e finalizar o programa */
+					free(iproduct);
+					free(ibrand);
+					free(icategory);
+					free(iprice);
 				return 0;
 			break;
 			default:
@@ -788,14 +792,18 @@ void criar_iprimary(Ip *indice_primario, int* nregistros) {
 		int count = 0;
 		Produto temp;
 		for (; count < *nregistros; count++) {
-			temp = recuperar_registro(count);
+			if (strlen(ARQUIVO) > (count * 192)) {
+				temp = recuperar_registro(count);
 
-			//Gravar no final do iprimary
-			Ip *novoIndice = (Ip *) malloc(sizeof(Ip));
-			strcpy(novoIndice->pk, temp.pk);
-			novoIndice->rrn = (count);
-			//printf("%s\n", temp.pk);
-			indice_primario[count] = *novoIndice;
+				//Gravar no final do iprimary
+				Ip *novoIndice = (Ip *) malloc(sizeof(Ip));
+				strcpy(novoIndice->pk, temp.pk);
+				novoIndice->rrn = (count);
+				//printf("%s\n", temp.pk);
+				indice_primario[count] = *novoIndice;
+			} else {
+				break;
+			}
 		}
 		ordenar_iprimary(indice_primario, nregistros);
 
@@ -868,27 +876,35 @@ void criar_secondary(Is *secondary, int *nregistros, int caso) {
 		if (caso == 0) {
 		//iproduct
 			for (; count < *nregistros; count++) {
-				temp = recuperar_registro(count);
+				if (strlen(ARQUIVO) > (count * 192)) {
+					temp = recuperar_registro(count);
 
-				//Gravar no final do iproduct
-				Is *novoIndice = (Is *) malloc(sizeof(Is));
-				strcpy(novoIndice->string, temp.nome);
-				strcpy(novoIndice->pk, temp.pk);
-				//printf("%s\n", temp.pk);
-				secondary[count] = *novoIndice;
+					//Gravar no final do iproduct
+					Is *novoIndice = (Is *) malloc(sizeof(Is));
+					strcpy(novoIndice->string, temp.nome);
+					strcpy(novoIndice->pk, temp.pk);
+					//printf("%s\n", temp.pk);
+					secondary[count] = *novoIndice;
+				} else {
+					break;
+				}
 			}
 			ordenar_secondary(secondary, nregistros, 0);
 		} else if (caso == 1) {
 			//ibrand
 			for (; count < *nregistros; count++) {
-				temp = recuperar_registro(count);
+				if (strlen(ARQUIVO) > (count * 192)) {
+					temp = recuperar_registro(count);
 
-				//Gravar no final do ibrand
-				Is *novoIndice = (Is *) malloc(sizeof(Is));
-				strcpy(novoIndice->string, temp.marca);
-				strcpy(novoIndice->pk, temp.pk);
-				//printf("%s\n", temp.pk);
-				secondary[count] = *novoIndice;
+					//Gravar no final do ibrand
+					Is *novoIndice = (Is *) malloc(sizeof(Is));
+					strcpy(novoIndice->string, temp.marca);
+					strcpy(novoIndice->pk, temp.pk);
+					//printf("%s\n", temp.pk);
+					secondary[count] = *novoIndice;
+				} else {
+					break;
+				}
 			}
 			ordenar_secondary(secondary, nregistros, 1);
 		}
@@ -913,14 +929,18 @@ void criar_secondary_price(Isf *secondary, int *nregistros){
 		Produto temp;
 
 		for (; count < *nregistros; count++) {
-			temp = recuperar_registro(count);
+			if (strlen(ARQUIVO) > (count * 192)) {
+				temp = recuperar_registro(count);
 
-			//Gravar no final do iprice
-			Isf *novoIndice = (Isf *) malloc(sizeof(Isf));
-			novoIndice->price = (arredondamento((float) strtof(temp.preco, NULL), (float) strtof(temp.desconto, NULL)));
-			strcpy(novoIndice->pk, temp.pk);
-			//printf("%s\n", temp.pk);
-			secondary[count] = *novoIndice;
+				//Gravar no final do iprice
+				Isf *novoIndice = (Isf *) malloc(sizeof(Isf));
+				novoIndice->price = (arredondamento((float) strtof(temp.preco, NULL), (float) strtof(temp.desconto, NULL)));
+				strcpy(novoIndice->pk, temp.pk);
+				//printf("%s\n", temp.pk);
+				secondary[count] = *novoIndice;
+			} else {
+				break;
+			}
 		}
 		ordenar_secondary_price(secondary, nregistros);
 	}
@@ -991,9 +1011,42 @@ int addSecondary_cat(Produto *prod, Ir *indice, int numCategorias) {
 	return localNumCategorias;
 }
 
-int criar_secondary_cat(Ir *secondary, int *nregistros) {
+void liberarArvore(ll **no) {
+	if ((*no)->prox != NULL)
+		liberarArvore(&(*no)->prox);
+	free(no);
+}
+
+void recursiveDead(ll *lista) {
+	if ((lista)->prox != NULL)
+		recursiveDead((lista)->prox);
+	free(lista);
+	lista = NULL;
+}
+
+int criar_secondary_cat(Ir *secondary, int *nregistros, int ncat) {
+
+	int count = 0;
+	ll *auxiliar, *aux;
+
+	if (ncat > 0) {
+		for (count = 0; count < ncat; count++) {
+			aux = secondary[count].lista;
+			while (aux) {
+				auxiliar = aux->prox;
+				free(aux);
+				aux = auxiliar;
+			}
+			secondary[count].lista = NULL;
+			//free((secondary[count]));
+			//recursiveDead(secondary[count].lista);
+		}
+		secondary = NULL;
+		free(secondary);
+		secondary = (Ir *) malloc(sizeof(Ir) * MAX_CATEGORIAS);
+	}
+
 	if (*nregistros > 0) {
-		int count = 0;
 		Produto temp;
 
 		int numCategorias = 0, numProdutos = 0;
@@ -1003,47 +1056,49 @@ int criar_secondary_cat(Ir *secondary, int *nregistros) {
 
 		Ir *nova_categoria = NULL;
 
-		for (; count < *nregistros; count++) {
-			temp = recuperar_registro(count);
+		for (count = 0; count < *nregistros; count++) {
+			if (strlen(ARQUIVO) > (count * 192)) {
+				temp = recuperar_registro(count);
 
-			strcpy(categoria_produto, temp.categoria);
+				strncpy(categoria_produto, temp.categoria, TAM_CATEGORIA);
 
-			token = strtok(categoria_produto, "|");
+				token = strtok(categoria_produto, "|");
+				//printf("Token = %s\n", categoria_produto);
+				while (token != NULL) {
+					nova_categoria = bb_categoria(token, secondary, &numCategorias);
+					if (nova_categoria == NULL) {
+						//Gravar no final do icategory
+						Ir *novoIndice = (Ir *) malloc(sizeof(Ir));
+						strcpy(novoIndice->cat, token);
 
-			while (token != NULL) {
-				nova_categoria = bb_categoria(token, secondary, &numCategorias);
-				if (nova_categoria == NULL) {
-					//Gravar no final do icategory
-					Ir *novoIndice = (Ir *) malloc(sizeof(Ir));
-					strcpy(novoIndice->cat, token);
+						//Criar a lista
+						novoIndice->lista = (ll *) malloc(sizeof(ll));
+						strcpy(novoIndice->lista->pk, temp.pk);
+						novoIndice->lista->prox = NULL;
 
-					//Criar a lista
-					novoIndice->lista = (ll *) malloc(sizeof(ll));
-					strcpy(novoIndice->lista->pk, temp.pk);
-					novoIndice->lista->prox = NULL;
+						secondary[numCategorias] = *novoIndice;
+						numCategorias++;
+					} else {
+						numProdutos = 0;
+						ll *lista_aux = nova_categoria->lista;
 
-					secondary[numCategorias] = *novoIndice;
-					numCategorias++;
-				} else {
-					numProdutos = 0;
-					ll *lista_aux = nova_categoria->lista;
+						while (lista_aux->prox != NULL) {
+							lista_aux = lista_aux->prox;
+							numProdutos++;
+						}
 
-					while (lista_aux->prox != NULL) {
-						lista_aux = lista_aux->prox;
-						numProdutos++;
+						ll *novo_no = (ll *) malloc(sizeof(ll));
+						strcpy(novo_no->pk, temp.pk);
+						novo_no->prox = NULL;
+
+						lista_aux->prox = novo_no;
+
+						MergeSort(&(nova_categoria->lista));
+
 					}
-
-					ll *novo_no = (ll *) malloc(sizeof(ll));
-					strcpy(novo_no->pk, temp.pk);
-					novo_no->prox = NULL;
-
-					lista_aux->prox = novo_no;
-
-					MergeSort(&(nova_categoria->lista));
-
+					ordenar_categoria(secondary, &numCategorias);
+					token = strtok(NULL, "|");
 				}
-				ordenar_categoria(secondary, &numCategorias);
-				token = strtok(NULL, "|");
 			}
 		}
 		return numCategorias;
@@ -1190,7 +1245,7 @@ int remover(Ip *iprimary, int *nregistros) {
 
 	if (indice == NULL) {
 		printf(REGISTRO_N_ENCONTRADO);
-		return -1;
+		return 0;
 	}
 	int rrn = indice->rrn;
 	Produto prod = recuperar_registro(rrn);
@@ -1198,12 +1253,12 @@ int remover(Ip *iprimary, int *nregistros) {
 	if (&prod != NULL) {
 		int movimentacao = (192 * rrn);
 		char *p = ARQUIVO + movimentacao;
-		sprintf(p, "*|");
-		ARQUIVO[movimentacao+2] = '@';
+
+		strncpy(p, "*|", 2);
 
 		strncpy(indice->pk, "", TAM_PRIMARY_KEY);
 		strcpy(indice->pk, "-1");
-		*nregistros--;
+		//*nregistros = *nregistros - 1;
 		//TODO: Recriar todos os indices
 
 		ordenar_iprimary(iprimary, nregistros);
@@ -1290,41 +1345,43 @@ void buscar(Ip *iprimary, Is *iproduct, Is *ibrand, Ir *icategory, int *nregistr
 			}
 
 			strcpy(nomeProduto, tempNome);
+			//While strcmp <= 0
 
-			buscaParcial = bb_secundario(nomeProduto, iproduct, nregistros);
-			if (buscaParcial == NULL)	{
-				printf(REGISTRO_N_ENCONTRADO);
-				return;
-			} else {
-				busca = bb_primaria(buscaParcial->pk, iprimary, nregistros);
-				if (busca == NULL || (strcmp(busca->pk, "-1") == 0)) {
-					printf(REGISTRO_N_ENCONTRADO);
-					return;
+			for (count = 0; count < *nregistros; count++) {
+				if (strlen(ARQUIVO) > (count * 192)) {
+					if (strcmp(nomeProduto, iproduct[count].string) == 0) {
+						busca = bb_primaria(iproduct[count].pk, iprimary, nregistros);
+						if (!(busca == NULL || (strcmp(busca->pk, "-1") == 0))) {
+
+							Produto prod = recuperar_registro(busca->rrn);
+
+							printf("%s\n", prod.pk);
+							printf("%s\n", prod.nome);
+							printf("%s\n", prod.marca);
+							printf("%s\n", prod.data);
+							//printf("%s\n", prod.ano);
+							printf("%s\n", prod.preco);
+							printf("%s\n", prod.desconto);
+
+							char categoria[TAM_CATEGORIA];
+							strcpy(categoria, prod.categoria);
+
+							for (count2 = 0; count2 < strlen(prod.categoria); count2++) {
+								if (prod.categoria[count2] == '|')
+									printf(", ");
+								else
+									printf("%c", prod.categoria[count2]);
+							}
+							printf("\n");
+
+						}
+					} else if (strcmp(nomeProduto, iproduct[count].string) < 0)
+						//TODO: se resultados = 0, não encontrado
+						return;
 				} else {
-					Produto prod = recuperar_registro(busca->rrn);
-
-					printf("%s\n", prod.pk);
-					printf("%s\n", prod.nome);
-					printf("%s\n", prod.marca);
-					printf("%s\n", prod.data);
-					//printf("%s\n", prod.ano);
-					printf("%s\n", prod.preco);
-					printf("%s\n", prod.desconto);
-
-					char categoria[TAM_CATEGORIA];
-					strcpy(categoria, prod.categoria);
-
-					for (count = 0; count < strlen(prod.categoria); count++) {
-						if (prod.categoria[count] == '|')
-							printf(", ");
-						else
-							printf("%c", prod.categoria[count]);
-					}
-					printf("\n");
+					break;
 				}
-				return;
 			}
-
 			break;
 		case 3:
 			strcpy(tempMarca, "");
@@ -1454,7 +1511,9 @@ void listagem(Ip *iprimary, Ir *icategory, Is *ibrand, Isf *iprice, int *nregist
 						else
 							printf("%c", prod.categoria[count2]);
 					}
-					printf("\n\n");
+					printf("\n");
+					if (count < (*nregistros - 1))
+						printf("\n");
 				}
 			}
 			if (numProdutos == 0) {
@@ -1505,7 +1564,9 @@ void listagem(Ip *iprimary, Ir *icategory, Is *ibrand, Isf *iprice, int *nregist
 							else
 								printf("%c", resultado.categoria[count2]);
 						}
-						printf("\n\n");
+						printf("\n");
+						if (aux->prox != NULL)
+							printf("\n");
 					}
 					aux = aux->prox;
 				}
@@ -1517,52 +1578,36 @@ void listagem(Ip *iprimary, Ir *icategory, Is *ibrand, Isf *iprice, int *nregist
 			break;
 
 		case 3:
-			numResultados = 0;
-			strcpy(tempMarca, "");
-			while ((*ch = getchar()) != '\n') {
-				strcat(tempMarca, ch);
-			}
 
-			strcpy(marcaProduto, tempMarca);
-
-			//Busca pela marca
 			for (count = 0; count < *nregistros; count++) {
-				if (strcmp(ibrand[count].string, marcaProduto) == 0) {
-					primaria = bb_primaria(ibrand[count].pk, iprimary, nregistros);
+
+				primaria = bb_primaria(ibrand[count].pk, iprimary, nregistros);
+
 					if (primaria != NULL) {
-						if (strcmp(primaria->pk, "-1") != 0) {
-							resultados[numResultados] = recuperar_registro(primaria->rrn);
-							numResultados++;
+						resultado = recuperar_registro(primaria->rrn);
+
+						printf("%s\n", resultado.pk);
+						printf("%s\n", resultado.nome);
+						printf("%s\n", resultado.marca);
+						printf("%s\n", resultado.data);
+						//printf("%s\n", prod.ano);
+						printf("%s\n", resultado.preco);
+						printf("%s\n", resultado.desconto);
+
+						char categoria2[TAM_CATEGORIA];
+						strcpy(categoria2, resultado.categoria);
+
+						for (count2 = 0; count2 < strlen(resultado.categoria); count2++) {
+							if (resultado.categoria[count2] == '|')
+								printf(", ");
+							else
+								printf("%c", resultado.categoria[count2]);
 						}
-					}
+						printf("\n");
+						if (count < (*nregistros - 1))
+							printf("\n");
 				}
 			}
-			if (numResultados > 0) {
-				for (count = 0; count < numResultados; count++) {
-					printf("%s\n", resultados[count].pk);
-					printf("%s\n", resultados[count].nome);
-					printf("%s\n", resultados[count].marca);
-					printf("%s\n", resultados[count].data);
-					//printf("%s\n", prod.ano);
-					printf("%s\n", resultados[count].preco);
-					printf("%s\n", resultados[count].desconto);
-
-					char categoria2[TAM_CATEGORIA];
-					strcpy(categoria2, resultados[count].categoria);
-
-					for (count2 = 0; count2 < strlen(resultados[count].categoria); count2++) {
-						if (resultados[count].categoria[count2] == '|')
-							printf(", ");
-						else
-							printf("%c", resultados[count].categoria[count2]);
-					}
-					printf("\n\n");
-				}
-			} else {
-				printf(REGISTRO_N_ENCONTRADO);
-				return;
-			}
-
 			break;
 
 		case 4:
@@ -1583,8 +1628,8 @@ void listagem(Ip *iprimary, Ir *icategory, Is *ibrand, Isf *iprice, int *nregist
 						printf("%s\n", prod.marca);
 						printf("%s\n", prod.data);
 						//printf("%s\n", prod.ano);
-						printf("%s\n", prod.preco);
-						printf("%s\n", prod.desconto);
+
+						printf("%07.2f\n", iprice[count].price);
 
 						char categoria2[TAM_CATEGORIA];
 						strcpy(categoria2, prod.categoria);
@@ -1595,7 +1640,9 @@ void listagem(Ip *iprimary, Ir *icategory, Is *ibrand, Isf *iprice, int *nregist
 							else
 								printf("%c", prod.categoria[count2]);
 						}
-						printf("\n\n");
+						printf("\n");
+						if (count < (*nregistros - 1))
+							printf("\n");
 
 					}
 				}
@@ -1603,4 +1650,21 @@ void listagem(Ip *iprimary, Ir *icategory, Is *ibrand, Isf *iprice, int *nregist
 
 			break;
 	}
+}
+
+void liberarEspaco(Ip *iprimary, Ir *icategory, Is *ibrand, Isf *iprice, Is *iproduct, int *nregistros, int ncat) {
+	//printf("%s\n\n", ARQUIVO);
+	//printf("Liberar espaço::: \n" );
+	char *s = ARQUIVO;
+	while( s=strstr(ARQUIVO,"*|") )
+    memmove(s,s+192,1+strlen(s+192));
+	//printf("%d\n", *nregistros);
+
+	criar_iprimary(iprimary, nregistros);
+	criar_secondary(iproduct, nregistros, 0);
+	criar_secondary(ibrand, nregistros, 1);
+	criar_secondary_price(iprice, nregistros);
+	//printf("Secundário::::: \n");
+	//printf("%s\n", ARQUIVO);
+	criar_secondary_cat(icategory, nregistros, ncat);
 }
