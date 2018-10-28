@@ -299,6 +299,11 @@ int addSecondary_cat(Produto *prod, Ir *indice, int numCategorias);
 */
 int alterar(Ip *iprimary, int nregistros, Isf *iprice);
 
+/*
+		Função para remover um produto
+*/
+int remover(Ip *iprimary, int *nregistros);
+
 /* ==========================================================================
  * ============================ FUNÇÃO PRINCIPAL ============================
  * =============================== NÃO ALTERAR ============================== */
@@ -361,12 +366,10 @@ int main(){
 			case 3:
 				/*excluir produto*/
 				printf(INICIO_EXCLUSAO);
-				/*
-				if(remover([args]))
+				if(remover(iprimary, &nregistros))
 					printf(SUCESSO);
 				else
 					printf(FALHA);
-				*/
 			break;
 			case 4:
 				/*busca*/
@@ -1133,6 +1136,37 @@ int alterar(Ip *iprimary, int nregistros, Isf *iprice) {
 		sprintf(p, "%s", descontinho);
 		ARQUIVO[movimentacao+3] = '@';
 		criar_secondary_price(iprice, &nregistros);
+		return 1;
+	}
+	return 0;
+}
+
+int remover(Ip *iprimary, int *nregistros) {
+	char *chavinha = (char *) malloc(TAM_PRIMARY_KEY * sizeof(char));
+
+	char *ch = (char *) malloc(sizeof(char));
+
+	while ((*ch = getchar()) != '\n') {
+		strcat(chavinha, ch);
+	}
+
+	Ip * indice = bb_primaria(chavinha, iprimary, nregistros);
+
+	if (indice == NULL) {
+		printf(REGISTRO_N_ENCONTRADO);
+		return -1;
+	}
+	int rrn = indice->rrn;
+	Produto prod = recuperar_registro(rrn);
+
+	if (&prod != NULL) {
+		int movimentacao = (192 * rrn);
+		char *p = ARQUIVO + movimentacao;
+		sprintf(p, "*|");
+		ARQUIVO[movimentacao+2] = '@';
+		strcpy(indice->pk, "-1");
+		*nregistros--;
+		//TODO: Recriar todos os indices
 		return 1;
 	}
 	return 0;
