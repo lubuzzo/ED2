@@ -319,6 +319,11 @@ Is *bb_secundario(char *chave, Is *indice, int *nregistros);
 */
 void buscar(Ip *iprimary, Is *iproduct, Is *ibrand, Ir *icategory, int *nregistros, int numcat);
 
+/*
+		Função para listagem de produtos
+*/
+void listagem(Ip *iprimary, Ir *icategory, Is *ibrand, Isf *iprice, int *nregistros, int ncat);
+
 /* ==========================================================================
  * ============================ FUNÇÃO PRINCIPAL ============================
  * =============================== NÃO ALTERAR ============================== */
@@ -397,6 +402,7 @@ int main(){
 			case 5:
 				/*listagens*/
 				printf(INICIO_LISTAGEM);
+				listagem(iprimary, icategory, ibrand, iprice, &nregistros, ncat);
 			break;
 			case 6:
 				/*libera espaço*/
@@ -1386,6 +1392,49 @@ void buscar(Ip *iprimary, Is *iproduct, Is *ibrand, Ir *icategory, int *nregistr
 
 			}
 			return;
+
+			break;
+	}
+}
+
+void listagem(Ip *iprimary, Ir *icategory, Is *ibrand, Isf *iprice, int *nregistros, int ncat) {
+	int opPrint = 0;
+	int count = 0, count2 = 0;
+	Produto prod;
+	scanf("%d%*c", &opPrint);
+	int numProdutos = 0;
+	switch (opPrint) {
+		case 1:
+
+			for (count = 0; count < *nregistros; count++) {
+				//printf("%s\n", iprimary[count].pk);
+				if (strcmp(iprimary[count].pk, "-1") != 0) {
+					numProdutos++;
+					prod = recuperar_registro(iprimary[count].rrn);
+					printf("%s\n", prod.pk);
+					printf("%s\n", prod.nome);
+					printf("%s\n", prod.marca);
+					printf("%s\n", prod.data);
+					//printf("%s\n", prod.ano);
+					printf("%s\n", prod.preco);
+					printf("%s\n", prod.desconto);
+
+					char categoria[TAM_CATEGORIA];
+					strcpy(categoria, prod.categoria);
+
+					for (count2 = 0; count2 < strlen(prod.categoria); count2++) {
+						if (prod.categoria[count2] == '|')
+							printf(", ");
+						else
+							printf("%c", prod.categoria[count2]);
+					}
+					printf("\n");
+				}
+			}
+			if (numProdutos == 0) {
+				printf(REGISTRO_N_ENCONTRADO);
+				return;				
+			}
 
 			break;
 	}
