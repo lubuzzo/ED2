@@ -1200,6 +1200,8 @@ int remover(Ip *iprimary, int *nregistros) {
 		char *p = ARQUIVO + movimentacao;
 		sprintf(p, "*|");
 		ARQUIVO[movimentacao+2] = '@';
+
+		strncpy(indice->pk, "", TAM_PRIMARY_KEY);
 		strcpy(indice->pk, "-1");
 		*nregistros--;
 		//TODO: Recriar todos os indices
@@ -1251,7 +1253,7 @@ void buscar(Ip *iprimary, Is *iproduct, Is *ibrand, Ir *icategory, int *nregistr
 
 			busca = bb_primaria(codProduto, iprimary, nregistros);
 
-			if (busca == NULL) {
+			if (busca == NULL || (strcmp(busca->pk, "-1") == 0)) {
 				printf(REGISTRO_N_ENCONTRADO);
 				return;
 			} else {
@@ -1295,7 +1297,7 @@ void buscar(Ip *iprimary, Is *iproduct, Is *ibrand, Ir *icategory, int *nregistr
 				return;
 			} else {
 				busca = bb_primaria(buscaParcial->pk, iprimary, nregistros);
-				if (busca == NULL) {
+				if (busca == NULL || (strcmp(busca->pk, "-1") == 0)) {
 					printf(REGISTRO_N_ENCONTRADO);
 					return;
 				} else {
@@ -1343,8 +1345,13 @@ void buscar(Ip *iprimary, Is *iproduct, Is *ibrand, Ir *icategory, int *nregistr
 			//Busca pela marca
 			for (count = 0; count < *nregistros; count++) {
 				if (strcmp(ibrand[count].string, marcaProduto) == 0) {
-					resultados[numResultados] = recuperar_registro(bb_primaria(ibrand[count].pk, iprimary, nregistros)->rrn);
-					numResultados++;
+					busca = bb_primaria(ibrand[count].pk, iprimary, nregistros);
+					if (busca != NULL) {
+						if (strcmp(busca->pk, "-1") != 0) {
+							resultados[numResultados] = recuperar_registro(busca->rrn);
+							numResultados++;
+						}
+					}
 					//printf("achei\n");
 				}
 			}
@@ -1398,14 +1405,33 @@ void buscar(Ip *iprimary, Is *iproduct, Is *ibrand, Ir *icategory, int *nregistr
 }
 
 void listagem(Ip *iprimary, Ir *icategory, Is *ibrand, Isf *iprice, int *nregistros, int ncat) {
+
+	char *ch = (char *) malloc(sizeof(char));
+
 	int opPrint = 0;
 	int count = 0, count2 = 0;
-	Produto prod;
-	scanf("%d%*c", &opPrint);
 	int numProdutos = 0;
+	Produto prod;
+
+	char categoriaProduto[TAM_CATEGORIA];
+	char tempCategoria[TAM_CATEGORIA];
+
+	Ir *buscaParcialCategoria;
+	ll *aux;
+
+	Ip *primaria;
+	Produto resultados[MAX_REGISTROS];
+	Produto resultado;
+	int numResultados = 0;
+
+	char marcaProduto[TAM_MARCA];
+	char tempMarca[TAM_MARCA];
+
+	Isf *auxiliarPreco;
+
+	scanf("%d%*c", &opPrint);
 	switch (opPrint) {
 		case 1:
-
 			for (count = 0; count < *nregistros; count++) {
 				//printf("%s\n", iprimary[count].pk);
 				if (strcmp(iprimary[count].pk, "-1") != 0) {
@@ -1428,12 +1454,151 @@ void listagem(Ip *iprimary, Ir *icategory, Is *ibrand, Isf *iprice, int *nregist
 						else
 							printf("%c", prod.categoria[count2]);
 					}
-					printf("\n");
+					printf("\n\n");
 				}
 			}
 			if (numProdutos == 0) {
 				printf(REGISTRO_N_ENCONTRADO);
-				return;				
+				return;
+			}
+
+			break;
+		case 2:
+			numProdutos = 0;
+			//categoria
+			strcpy(tempCategoria, "");
+			while ((*ch = getchar()) != '\n') {
+				strcat(tempCategoria, ch);
+			}
+
+			strcpy(categoriaProduto, tempCategoria);
+
+			//Busca binária para achar a categoria
+			buscaParcialCategoria = bb_categoria(categoriaProduto, icategory, &ncat);
+			if (buscaParcialCategoria == NULL) {
+				printf(REGISTRO_N_ENCONTRADO);
+				return;
+			} else {
+				//printf("%s", buscaParcialCategoria->cat);
+
+				aux =  buscaParcialCategoria->lista;
+				while(aux != NULL){
+					primaria = bb_primaria(aux->pk, iprimary, nregistros);
+					if (primaria != NULL && strcmp(primaria->pk, "-1") != 0) {
+						numProdutos++;
+						resultado = recuperar_registro(primaria->rrn);
+
+						printf("%s\n", resultado.pk);
+						printf("%s\n", resultado.nome);
+						printf("%s\n", resultado.marca);
+						printf("%s\n", resultado.data);
+						//printf("%s\n", prod.ano);
+						printf("%s\n", resultado.preco);
+						printf("%s\n", resultado.desconto);
+
+						char categoria2[TAM_CATEGORIA];
+						strcpy(categoria2, resultado.categoria);
+
+						for (count2 = 0; count2 < strlen(resultado.categoria); count2++) {
+							if (resultado.categoria[count2] == '|')
+								printf(", ");
+							else
+								printf("%c", resultado.categoria[count2]);
+						}
+						printf("\n\n");
+					}
+					aux = aux->prox;
+				}
+				if (numProdutos == 0) {
+					printf(REGISTRO_N_ENCONTRADO);
+					return;
+				}
+			}
+			break;
+
+		case 3:
+			numResultados = 0;
+			strcpy(tempMarca, "");
+			while ((*ch = getchar()) != '\n') {
+				strcat(tempMarca, ch);
+			}
+
+			strcpy(marcaProduto, tempMarca);
+
+			//Busca pela marca
+			for (count = 0; count < *nregistros; count++) {
+				if (strcmp(ibrand[count].string, marcaProduto) == 0) {
+					primaria = bb_primaria(ibrand[count].pk, iprimary, nregistros);
+					if (primaria != NULL) {
+						if (strcmp(primaria->pk, "-1") != 0) {
+							resultados[numResultados] = recuperar_registro(primaria->rrn);
+							numResultados++;
+						}
+					}
+				}
+			}
+			if (numResultados > 0) {
+				for (count = 0; count < numResultados; count++) {
+					printf("%s\n", resultados[count].pk);
+					printf("%s\n", resultados[count].nome);
+					printf("%s\n", resultados[count].marca);
+					printf("%s\n", resultados[count].data);
+					//printf("%s\n", prod.ano);
+					printf("%s\n", resultados[count].preco);
+					printf("%s\n", resultados[count].desconto);
+
+					char categoria2[TAM_CATEGORIA];
+					strcpy(categoria2, resultados[count].categoria);
+
+					for (count2 = 0; count2 < strlen(resultados[count].categoria); count2++) {
+						if (resultados[count].categoria[count2] == '|')
+							printf(", ");
+						else
+							printf("%c", resultados[count].categoria[count2]);
+					}
+					printf("\n\n");
+				}
+			} else {
+				printf(REGISTRO_N_ENCONTRADO);
+				return;
+			}
+
+			break;
+
+		case 4:
+
+			//Buscando os preços
+			for (count = 0; count < *nregistros; count++) {
+
+				//auxiliarPreco = iprice[count];
+
+
+				primaria = bb_primaria(iprice[count].pk, iprimary, nregistros);
+				if (primaria != NULL) {
+					if (strcmp(primaria->pk, "-1") != 0) {
+						prod = recuperar_registro(primaria->rrn);
+
+						printf("%s\n", prod.pk);
+						printf("%s\n", prod.nome);
+						printf("%s\n", prod.marca);
+						printf("%s\n", prod.data);
+						//printf("%s\n", prod.ano);
+						printf("%s\n", prod.preco);
+						printf("%s\n", prod.desconto);
+
+						char categoria2[TAM_CATEGORIA];
+						strcpy(categoria2, prod.categoria);
+
+						for (count2 = 0; count2 < strlen(prod.categoria); count2++) {
+							if (prod.categoria[count2] == '|')
+								printf(", ");
+							else
+								printf("%c", prod.categoria[count2]);
+						}
+						printf("\n\n");
+
+					}
+				}
 			}
 
 			break;
