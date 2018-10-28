@@ -135,7 +135,7 @@ float arredondamento(float preco, float desconto);
 /*
 		Função para inserir um novo Produto
 */
-void inserirProduto(int *num, Ip *indice, Is *iproduct, Is *ibrand, Isf *iprice);
+int inserirProduto(int *num, Ip *indice, Is *iproduct, Is *ibrand, Isf *iprice, Ir *icategory, int numCategorias);
 
 /*
 		Função para contar quantos registros há no ARQUIVO
@@ -255,6 +255,45 @@ void criar_secondary_price(Isf *secondary, int *nregistros);
 */
 void addSecondary_price(Produto *prod, Isf *indice, int num);
 
+/*
+		Função para busca binária por categoria
+*/
+Ir *bb_categoria(char *chave, Ir *indice, int *nregistros);
+
+/*
+		Função para comparar categoria com string
+*/
+int comparar_categoria_str(const void *a, const void *b);
+
+/*
+		Função para criar o icategory
+		retorna o número de categorias
+*/
+int criar_secondary_cat(Ir *secondary, int *nregistros);
+
+/*
+		Função para ordenar icategory
+*/
+void ordenar_categoria(Ir *secondary, int *nregistros);
+
+/*
+		Função para comparar o icategories
+*/
+int comparar_icategory(const void *a, const void *b);
+
+/*
+		Conjunto de funções para executar o merge sort (log.n) na orderação das PKs na categoria
+		Base: https://www.geeksforgeeks.org/merge-sort-for-linked-list/
+*/
+void MergeSort(ll** head);
+void FrontBackSplit(ll* source, ll** frontRef, ll** backRef);
+ll* SortedMerge(ll* a, ll* b);
+
+/*
+		Função para adicionar o produto ao icategory
+*/
+int addSecondary_cat(Produto *prod, Ir *indice, int numCategorias);
+
 /* ==========================================================================
  * ============================ FUNÇÃO PRINCIPAL ============================
  * =============================== NÃO ALTERAR ============================== */
@@ -284,7 +323,10 @@ int main(){
 	if (carregarArquivo)
 		criar_secondary(ibrand, &nregistros, 1);
 
-	Ir *icategory = (Ir *) malloc (sizeof(Ir));
+	Ir *icategory = (Ir *) malloc (MAX_REGISTROS * sizeof(Ir));
+	if (carregarArquivo)
+		ncat = criar_secondary_cat(icategory, &nregistros);
+
 	Isf *iprice = (Isf *) malloc (MAX_REGISTROS * sizeof(Isf));
 	if (carregarArquivo)
 		criar_secondary_price(iprice, &nregistros);
@@ -301,7 +343,7 @@ int main(){
 		switch(opcao)
 		{
 			case 1:
-				inserirProduto(&nregistros, iprimary, iproduct, ibrand, iprice);
+				ncat = inserirProduto(&nregistros, iprimary, iproduct, ibrand, iprice, icategory, ncat);
 			break;
 			case 2:
 				/*alterar desconto*/
@@ -521,7 +563,7 @@ float arredondamento(float preco, float desconto) {
   return preco;
 }
 
-void inserirProduto(int *num, Ip *indice, Is *iproduct, Is *ibrand, Isf *iprice) {
+int inserirProduto(int *num, Ip *indice, Is *iproduct, Is *ibrand, Isf *iprice, Ir *icategory, int numCategorias) {
 	Produto *prod = (Produto *) malloc(sizeof(Produto));
 
 	strcpy(prod->nome, lerNomeProduto());
@@ -544,7 +586,7 @@ void inserirProduto(int *num, Ip *indice, Is *iproduct, Is *ibrand, Isf *iprice)
 		addSecondary(prod, iproduct, 0, *num);
 		addSecondary(prod, ibrand, 1, *num);
 		addSecondary_price(prod, iprice, *num);
-
+		int totalCategorias = addSecondary_cat(prod, icategory, numCategorias);
 		*num = *num + 1;
 
 		//Ordena o iprimary
@@ -553,7 +595,10 @@ void inserirProduto(int *num, Ip *indice, Is *iproduct, Is *ibrand, Isf *iprice)
 		ordenar_secondary(iproduct, num, 0);
 		ordenar_secondary(ibrand, num, 1);
 		ordenar_secondary_price(iprice, num);
+
+		return totalCategorias;
 	}
+	return numCategorias;
 }
 
 void addIprimary(Produto *prod, Ip *indice, int num) {
@@ -846,4 +891,203 @@ void addSecondary_price(Produto *prod, Isf *indice, int num) {
 	strcpy(novoIndice->pk, prod->pk);
 
 	indice[num] = *novoIndice;
+}
+
+int addSecondary_cat(Produto *prod, Ir *indice, int numCategorias) {
+	int count = 0;
+	Produto temp;
+	temp = *prod;
+
+	int numProdutos = 0;
+
+	char categoria_produto[TAM_CATEGORIA];
+	char *token;
+
+	int localNumCategorias = numCategorias;
+
+	Ir *nova_categoria = NULL;
+
+	strcpy(categoria_produto, temp.categoria);
+
+	token = strtok(categoria_produto, "|");
+
+	while (token != NULL) {
+		nova_categoria = bb_categoria(token, indice, &localNumCategorias);
+		if (nova_categoria == NULL) {
+			//Gravar no final do icategory
+			Ir *novoIndice = (Ir *) malloc(sizeof(Ir));
+			strcpy(novoIndice->cat, token);
+
+			//Criar a lista
+			novoIndice->lista = (ll *) malloc(sizeof(ll));
+			strcpy(novoIndice->lista->pk, temp.pk);
+			novoIndice->lista->prox = NULL;
+
+			indice[localNumCategorias] = *novoIndice;
+			localNumCategorias++;
+		} else {
+			numProdutos = 0;
+			ll *lista_aux = nova_categoria->lista;
+
+			while (lista_aux->prox != NULL) {
+				lista_aux = lista_aux->prox;
+				numProdutos++;
+			}
+
+			ll *novo_no = (ll *) malloc(sizeof(ll));
+			strcpy(novo_no->pk, temp.pk);
+			novo_no->prox = NULL;
+
+			lista_aux->prox = novo_no;
+
+			MergeSort(&(nova_categoria->lista));
+
+		}
+		ordenar_categoria(indice, &localNumCategorias);
+		token = strtok(NULL, "|");
+	}
+	return localNumCategorias;
+}
+
+int criar_secondary_cat(Ir *secondary, int *nregistros) {
+	if (*nregistros > 0) {
+		int count = 0;
+		Produto temp;
+
+		int numCategorias = 0, numProdutos = 0;
+
+		char categoria_produto[TAM_CATEGORIA];
+		char *token;
+
+		Ir *nova_categoria = NULL;
+
+		for (; count < *nregistros; count++) {
+			temp = recuperar_registro(count);
+
+			strcpy(categoria_produto, temp.categoria);
+
+			token = strtok(categoria_produto, "|");
+
+			while (token != NULL) {
+				nova_categoria = bb_categoria(token, secondary, &numCategorias);
+				if (nova_categoria == NULL) {
+					//Gravar no final do icategory
+					Ir *novoIndice = (Ir *) malloc(sizeof(Ir));
+					strcpy(novoIndice->cat, token);
+
+					//Criar a lista
+					novoIndice->lista = (ll *) malloc(sizeof(ll));
+					strcpy(novoIndice->lista->pk, temp.pk);
+					novoIndice->lista->prox = NULL;
+
+					secondary[numCategorias] = *novoIndice;
+					numCategorias++;
+				} else {
+					numProdutos = 0;
+					ll *lista_aux = nova_categoria->lista;
+
+					while (lista_aux->prox != NULL) {
+						lista_aux = lista_aux->prox;
+						numProdutos++;
+					}
+
+					ll *novo_no = (ll *) malloc(sizeof(ll));
+					strcpy(novo_no->pk, temp.pk);
+					novo_no->prox = NULL;
+
+					lista_aux->prox = novo_no;
+
+					MergeSort(&(nova_categoria->lista));
+
+				}
+				ordenar_categoria(secondary, &numCategorias);
+				token = strtok(NULL, "|");
+			}
+		}
+		return numCategorias;
+	}
+	return 0;
+}
+
+Ir *bb_categoria(char *chave, Ir *indice, int *nregistros) {
+	return (Ir *) bsearch(chave, indice, *nregistros, sizeof(indice[0]), comparar_categoria_str);
+}
+
+int comparar_categoria_str(const void *a, const void *b) {
+	const char *ia = (char *)a;
+	const Ir *ib = (Ir *)b;
+
+	return strcmp(ia, ib->cat);
+}
+
+void ordenar_categoria(Ir *secondary, int *nregistros) {
+	if (*nregistros > 1)
+		qsort(secondary, *nregistros, sizeof(Ir), comparar_icategory);
+}
+
+int comparar_icategory(const void *a, const void *b) {
+	const Ir *ia = (Ir *)a;
+	const Ir *ib = (Ir *)b;
+	//printf("%s vs %s == %d\n", ia->pk, ib->pk, strcmp(ia->pk, ib->pk));
+	return strcmp(ia->cat, ib->cat);
+}
+
+ll* SortedMerge(ll* a, ll* b) {
+	if (a == NULL)
+		return b;
+
+	else if (b == NULL)
+		return a;
+
+	ll* result = NULL;
+
+	if (strcmp(a->pk, b->pk) < 0) {
+		result = a;
+		result->prox = SortedMerge(a->prox, b);
+	}
+	else {
+		result = b;
+		result->prox = SortedMerge(a, b->prox);
+	}
+
+	return result;
+}
+
+void FrontBackSplit(ll* source, ll** frontRef, ll** backRef) {
+	// if length is less than 2, handle separately
+	if (source == NULL || source->prox == NULL) {
+		*frontRef = source;
+		*backRef = NULL;
+		return;
+	}
+
+	ll* slow = source;
+	ll* fast = source->prox;
+
+	while (fast != NULL) {
+		fast = fast->prox;
+		if (fast != NULL) {
+			slow = slow->prox;
+			fast = fast->prox;
+		}
+	}
+
+	*frontRef = source;
+	*backRef = slow->prox;
+	slow->prox = NULL;
+}
+
+void MergeSort(ll** head) {
+	if (*head == NULL || (*head)->prox == NULL)
+		return;
+
+	ll* a;
+	ll* b;
+
+	FrontBackSplit(*head, &a, &b);
+
+	MergeSort(&a);
+	MergeSort(&b);
+
+	*head = SortedMerge(a, b);
 }
