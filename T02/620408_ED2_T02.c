@@ -176,43 +176,43 @@ int exibir_registro(int rrn);
 		Função para ler o nome do produto (do standart input para ram)
 		Retorna o nome do produto lido
 */
-char *lerNomeProduto();
+void lerNomeProduto(Produto *prod);
 
 /*
 		Função para ler a marca do produto (do standart input para ram)
 		Retorna a marca do produto lido
 */
-char *lerMarcaProduto();
+void lerMarcaProduto(Produto *prod);
 
 /*
 		Função para ler a data de registro do produto (do standart input para ram)
 		Retorna a data de registro do produto lido
 */
-char *lerDataProduto();
+void lerDataProduto(Produto *prod);
 
 /*
 		Função para ler o ano de lançamento do produto (do standart input para ram)
 		Retorna o ano de lançamento do produto lido
 */
-char *lerAnoProduto();
+void lerAnoProduto(Produto *prod);
 
 /*
 		Função para ler o preço do produto (do standart input para ram)
 		Retorna o preço do produto lido
 */
-char *lerPrecoProduto();
+void lerPrecoProduto(Produto *prod);
 
 /*
 		Função para ler o desconto no preço do produto (do standart input para ram)
 		Retorna o desconto no preço do produto lido
 */
-char *lerDescontoProduto();
+void lerDescontoProduto(Produto *prod);
 
 /*
 		Função para ler a(s) categoria(s) do produto (do standart input para ram)
 		Retorna a(s) categoria(s) do produto lido
 */
-char *lerCategoriaProduto();
+void lerCategoriaProduto(Produto *prod);
 
 /*
 		Gerar a chave primária do registro
@@ -354,18 +354,18 @@ int exibir_registro(int rrn)
 void cadastrar(Indice* iprimary, Indice* ibrand) {
 	Produto *prod = (Produto *) calloc(1,sizeof(Produto));
 
-	strcpy(prod->nome, lerNomeProduto());
-	strcpy(prod->marca, lerMarcaProduto());
-	strcpy(prod->data, lerDataProduto());
-	strcpy(prod->ano, lerAnoProduto());
-	strcpy(prod->preco, lerPrecoProduto());
-	strcpy(prod->desconto, lerDescontoProduto());
-	strcpy(prod->categoria, lerCategoriaProduto());
+	lerNomeProduto(prod);
+	lerMarcaProduto(prod);
+	lerDataProduto(prod);
+	lerAnoProduto(prod);
+	lerPrecoProduto(prod);
+	lerDescontoProduto(prod);
+	lerCategoriaProduto(prod);
 
 	gerarCodigo(prod);
 }
 
-char *lerNomeProduto() {
+void lerNomeProduto(Produto *prod) {
 	char *string = (char *) calloc(1, TAM_NOME * sizeof(char));
 
 	char *ch = (char *) calloc(1, sizeof(char));
@@ -374,12 +374,13 @@ char *lerNomeProduto() {
 		strcat(string, ch);
 	}
 
-	free(ch);
+	strcpy(prod->nome, string);
 
-	return string;
+	free(ch);
+	free(string);
 }
 
-char *lerMarcaProduto() {
+void lerMarcaProduto(Produto *prod) {
 	char *string = (char *) calloc(1, TAM_MARCA * sizeof(char));
 
 	char *ch = (char *) calloc(1, sizeof(char));
@@ -388,12 +389,13 @@ char *lerMarcaProduto() {
 		strcat(string, ch);
 	}
 
-	free(ch);
+	strcpy(prod->marca, string);
 
-	return string;
+	free(ch);
+	free(string);
 }
 
-char *lerDataProduto() {
+void lerDataProduto(Produto *prod) {
 	char *string = (char *) calloc(1, TAM_DATA * sizeof(char));
 
 	char *ch = (char *) calloc(1, sizeof(char));
@@ -402,12 +404,13 @@ char *lerDataProduto() {
 		strcat(string, ch);
 	}
 
-	free(ch);
+	strcpy(prod->data, string);
 
-	return string;
+	free(ch);
+	free(string);
 }
 
-char *lerAnoProduto() {
+void lerAnoProduto(Produto *prod) {
 	char *string = (char *) calloc(1, TAM_ANO * sizeof(char));
 
 	char *ch = (char *) calloc(1, sizeof(char));
@@ -416,12 +419,13 @@ char *lerAnoProduto() {
 		strcat(string, ch);
 	}
 
-	free(ch);
+	strcpy(prod->ano, string);
 
-	return string;
+	free(ch);
+	free(string);
 }
 
-char *lerPrecoProduto() {
+void lerPrecoProduto(Produto *prod) {
 	char *string = (char *) calloc(1, TAM_PRECO * sizeof(char));
 
 	char *ch = (char *) calloc(1, sizeof(char));
@@ -430,12 +434,13 @@ char *lerPrecoProduto() {
 		strcat(string, ch);
 	}
 
-	free(ch);
+	strcpy(prod->preco, string);
 
-	return string;
+	free(ch);
+	free(string);
 }
 
-char *lerDescontoProduto() {
+void lerDescontoProduto(Produto *prod) {
 	char *string = (char *) calloc(1, TAM_DESCONTO * sizeof(char));
 
 	char *ch = (char *) calloc(1, sizeof(char));
@@ -444,12 +449,13 @@ char *lerDescontoProduto() {
 		strcat(string, ch);
 	}
 
-	free(ch);
+	strcpy(prod->desconto, string);
 
-	return string;
+	free(ch);
+	free(string);
 }
 
-char *lerCategoriaProduto() {
+void lerCategoriaProduto(Produto *prod) {
 	char *string = (char *) calloc(1, TAM_CATEGORIA * sizeof(char));
 
 	char *ch = (char *) calloc(1, sizeof(char));
@@ -458,9 +464,10 @@ char *lerCategoriaProduto() {
 		strcat(string, ch);
 	}
 
-	free(ch);
+	strcpy(prod->categoria, string);
 
-	return string;
+	free(ch);
+	free(string);
 }
 
 void gerarCodigo(Produto *prod) {
