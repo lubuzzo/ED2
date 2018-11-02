@@ -120,42 +120,42 @@ int tamanho_registro_is;
 /* ==========================================================================
  * ========================= PROTÓTIPOS DAS FUNÇÕES =========================
  * ========================================================================== */
- 
+
  /********************FUNÇÕES DO MENU*********************/
  void cadastrar(Indice* iprimary, Indice* ibrand);
- 
+
  int alterar(Indice iprimary);
- 
+
  void buscar(Indice iprimary,Indice ibrand);
- 
+
  void listar(Indice iprimary,Indice ibrand);
- 
+
  /*******************************************************/
- 
+
  /* Recebe do usuário uma string simulando o arquivo completo e retorna o número
   * de registros. */
  int carregar_arquivo();
- 
+
 /* (Re)faz o Cria iprimary*/
 void criar_iprimary(Indice *iprimary);
- 
-/* (Re)faz o índice de jogos  */
+
+/* (Re)faz o índice de produtos  */
 void criar_ibrand(Indice *ibrand) ;
- 
+
 /*Escreve um nó da árvore no arquivo de índice,
 * O terceiro parametro serve para informar qual indice se trata */
 void write_btree(void *salvar, int rrn, char ip);
- 
+
 /*Lê um nó do arquivo de índice e retorna na estrutura*/
 void *read_btree(int rrn, char ip);
- 
+
 /* Aloca um nó de árvore para ser utilizado em memória primária, o primeiro parametro serve para informar que árvore se trata
 * É conveniente que essa função também inicialize os campos necessários com valores nulos*/
 void *criar_no(char ip);
- 
+
 /*Libera todos os campos dinâmicos do nó, inclusive ele mesmo*/
 void libera_no(void *node, char ip);
- 
+
 /*
 *   Caro aluno,
 *   caso não queira trabalhar com void*, é permitido dividir as funções que utilizam
@@ -165,10 +165,10 @@ void libera_no(void *node, char ip);
 *   void write_btree_ip(node_Btree_ip *salvar, int rrn),  node_Btree_ip *read_btree_ip(int rrn),
 *   void write_btree_is(node_Btree_is *salvar, int rrn) e node_Btree_is *read_btree_is(int rrn).
 */
- 
+
 /* Atualiza os dois índices com o novo registro inserido */
-void inserir_registro_indices(Indice *iprimary, Indice *ibrand, Jogo j);
- 
+void inserir_registro_indices(Indice *iprimary, Indice *ibrand, Produto p);
+
 /* Exibe o jogo */
 int exibir_registro(int rrn);
 
@@ -278,7 +278,7 @@ int exibir_registro(int rrn)
 	int desconto;
 	Produto j = recuperar_registro(rrn);
     char *cat, categorias[TAM_CATEGORIA];
-	
+
 	printf("%s\n", j.pk);
 	printf("%s\n", j.nome);
 	printf("%s\n", j.marca);
@@ -290,7 +290,7 @@ int exibir_registro(int rrn)
 	preco = ((int) preco)/ (float) 100 ;
 	printf("%07.2f\n",  preco);
 	strcpy(categorias, j.categoria);
-	
+
 	for (cat = strtok (categorias, "|"); cat != NULL; cat = strtok (NULL, "|"))
     	printf("%s ", cat);
 	printf("\n");
