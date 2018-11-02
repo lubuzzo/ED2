@@ -172,6 +172,59 @@ void inserir_registro_indices(Indice *iprimary, Indice *ibrand, Produto p);
 /* Exibe o jogo */
 int exibir_registro(int rrn);
 
+/*
+		Função para ler o nome do produto (do standart input para ram)
+		Retorna o nome do produto lido
+*/
+char *lerNomeProduto();
+
+/*
+		Função para ler a marca do produto (do standart input para ram)
+		Retorna a marca do produto lido
+*/
+char *lerMarcaProduto();
+
+/*
+		Função para ler a data de registro do produto (do standart input para ram)
+		Retorna a data de registro do produto lido
+*/
+char *lerDataProduto();
+
+/*
+		Função para ler o ano de lançamento do produto (do standart input para ram)
+		Retorna o ano de lançamento do produto lido
+*/
+char *lerAnoProduto();
+
+/*
+		Função para ler o preço do produto (do standart input para ram)
+		Retorna o preço do produto lido
+*/
+char *lerPrecoProduto();
+
+/*
+		Função para ler o desconto no preço do produto (do standart input para ram)
+		Retorna o desconto no preço do produto lido
+*/
+char *lerDescontoProduto();
+
+/*
+		Função para ler a(s) categoria(s) do produto (do standart input para ram)
+		Retorna a(s) categoria(s) do produto lido
+*/
+char *lerCategoriaProduto();
+
+/*
+		Gerar a chave primária do registro
+*/
+void gerarCodigo(Produto *prod);
+
+
+/*
+		Recuperar registro
+*/
+Produto recuperar_registro(int rrn);
+
 int main()
 {
 	char *p; /* # */
@@ -188,11 +241,11 @@ int main()
 
 	/* Índice primário */
 	Indice iprimary ;
-	criar_iprimary(&iprimary);
+	/*criar_iprimary(&iprimary);*/
 
 	/* Índice secundário de nomes dos Produtos */
 	Indice ibrand;
-	criar_ibrand(&ibrand);
+	/*criar_ibrand(&ibrand);*/
 
 	/* Execução do programa */
 	int opcao = 0;
@@ -205,18 +258,18 @@ int main()
 			break;
 		case 2: /* Alterar o desconto de um Produto */
 			printf(INICIO_ALTERACAO);
-			if (alterar(iprimary))
+			/*if (alterar(iprimary))
 				printf(SUCESSO);
 			else
-				printf(FALHA);
+				printf(FALHA);*/
 			break;
 		case 3: /* Buscar um Produto */
 			printf(INICIO_BUSCA);
-			buscar(iprimary, ibrand);
+			/*buscar(iprimary, ibrand);*/
 			break;
 		case 4: /* Listar todos os Produtos */
 			printf(INICIO_LISTAGEM);
-			listar(iprimary, ibrand);
+			/*listar(iprimary, ibrand);*/
 			break;
 		case 5: /* Imprimir o arquivo de dados */
 			printf(INICIO_ARQUIVO);
@@ -296,4 +349,167 @@ int exibir_registro(int rrn)
 	printf("\n");
 
 	return 1;
+}
+
+void cadastrar(Indice* iprimary, Indice* ibrand) {
+	Produto *prod = (Produto *) calloc(1,sizeof(Produto));
+
+	strcpy(prod->nome, lerNomeProduto());
+	strcpy(prod->marca, lerMarcaProduto());
+	strcpy(prod->data, lerDataProduto());
+	strcpy(prod->ano, lerAnoProduto());
+	strcpy(prod->preco, lerPrecoProduto());
+	strcpy(prod->desconto, lerDescontoProduto());
+	strcpy(prod->categoria, lerCategoriaProduto());
+
+	gerarCodigo(prod);
+}
+
+char *lerNomeProduto() {
+	char *string = (char *) calloc(1, TAM_NOME * sizeof(char));
+
+	char *ch = (char *) calloc(1, sizeof(char));
+
+	while ((*ch = getchar()) != '\n') {
+		strcat(string, ch);
+	}
+
+	free(ch);
+
+	return string;
+}
+
+char *lerMarcaProduto() {
+	char *string = (char *) calloc(1, TAM_MARCA * sizeof(char));
+
+	char *ch = (char *) calloc(1, sizeof(char));
+
+	while ((*ch = getchar()) != '\n') {
+		strcat(string, ch);
+	}
+
+	free(ch);
+
+	return string;
+}
+
+char *lerDataProduto() {
+	char *string = (char *) calloc(1, TAM_DATA * sizeof(char));
+
+	char *ch = (char *) calloc(1, sizeof(char));
+
+	while ((*ch = getchar()) != '\n') {
+		strcat(string, ch);
+	}
+
+	free(ch);
+
+	return string;
+}
+
+char *lerAnoProduto() {
+	char *string = (char *) calloc(1, TAM_ANO * sizeof(char));
+
+	char *ch = (char *) calloc(1, sizeof(char));
+
+	while ((*ch = getchar()) != '\n') {
+		strcat(string, ch);
+	}
+
+	free(ch);
+
+	return string;
+}
+
+char *lerPrecoProduto() {
+	char *string = (char *) calloc(1, TAM_PRECO * sizeof(char));
+
+	char *ch = (char *) calloc(1, sizeof(char));
+
+	while ((*ch = getchar()) != '\n') {
+		strcat(string, ch);
+	}
+
+	free(ch);
+
+	return string;
+}
+
+char *lerDescontoProduto() {
+	char *string = (char *) calloc(1, TAM_DESCONTO * sizeof(char));
+
+	char *ch = (char *) calloc(1, sizeof(char));
+
+	while ((*ch = getchar()) != '\n') {
+		strcat(string, ch);
+	}
+
+	free(ch);
+
+	return string;
+}
+
+char *lerCategoriaProduto() {
+	char *string = (char *) calloc(1, TAM_CATEGORIA * sizeof(char));
+
+	char *ch = (char *) calloc(1, sizeof(char));
+
+	while ((*ch = getchar()) != '\n') {
+		strcat(string, ch);
+	}
+
+	free(ch);
+
+	return string;
+}
+
+void gerarCodigo(Produto *prod) {
+	char *codigo_temp = (char *) calloc(1,TAM_PRIMARY_KEY * sizeof(char));
+	char *codigo = (char *) calloc(1,TAM_PRIMARY_KEY * sizeof(char));
+	int count = 0;
+
+	strncpy(codigo_temp, prod->nome, 2);
+	strcat(codigo, codigo_temp);
+
+	strncpy(codigo_temp, prod->marca, 2);
+	strcat(codigo, codigo_temp);
+
+	codigo[4] = prod->data[0];
+	codigo[5] = prod->data[1];
+	codigo[6] = prod->data[3];
+	codigo[7] = prod->data[4];
+
+	strncpy(codigo_temp, prod->ano, 2);
+	strcat(codigo, codigo_temp);
+
+	for (count = 0; count < strlen(codigo_temp); count++)
+		codigo_temp[count] = toupper(codigo_temp[count]);
+
+	strcpy(prod->pk, codigo);
+
+	free(codigo_temp);
+	free(codigo);
+}
+
+Produto recuperar_registro(int rrn) {
+	char temp[193], *p;
+	strncpy(temp, ARQUIVO + ((rrn)*192), 192);
+	temp[192] = '\0';
+	Produto j;
+	p = strtok(temp,"@");
+	strcpy(j.nome,p);
+	p = strtok(NULL,"@");
+	strcpy(j.marca,p);
+	p = strtok(NULL,"@");
+	strcpy(j.data,p);
+	p = strtok(NULL,"@");
+	strcpy(j.ano,p);
+	p = strtok(NULL,"@");
+	strcpy(j.preco,p);
+	p = strtok(NULL,"@");
+	strcpy(j.desconto,p);
+	p = strtok(NULL,"@");
+	strcpy(j.categoria,p);
+	gerarCodigo(&j);
+	return j;
 }
