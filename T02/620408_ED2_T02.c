@@ -363,111 +363,45 @@ void cadastrar(Indice* iprimary, Indice* ibrand) {
 	lerCategoriaProduto(prod);
 
 	gerarCodigo(prod);
+
+	/*gravar no arquio*/
+
+	free(prod);
 }
 
 void lerNomeProduto(Produto *prod) {
-	char *string = (char *) calloc(1, TAM_NOME * sizeof(char));
-
-	char *ch = (char *) calloc(1, sizeof(char));
-
-	while ((*ch = getchar()) != '\n') {
-		strcat(string, ch);
-	}
-
-	strcpy(prod->nome, string);
-
-	free(ch);
-	free(string);
+	fgets(prod->nome, TAM_NOME+1, stdin);
+	prod->nome[strlen(prod->nome)-1]  = '\0';
 }
 
 void lerMarcaProduto(Produto *prod) {
-	char *string = (char *) calloc(1, TAM_MARCA * sizeof(char));
-
-	char *ch = (char *) calloc(1, sizeof(char));
-
-	while ((*ch = getchar()) != '\n') {
-		strcat(string, ch);
-	}
-
-	strcpy(prod->marca, string);
-
-	free(ch);
-	free(string);
+	fgets(prod->marca, TAM_MARCA+1, stdin);
+	prod->marca[strlen(prod->marca)-1]  = '\0';
 }
 
 void lerDataProduto(Produto *prod) {
-	char *string = (char *) calloc(1, TAM_DATA * sizeof(char));
-
-	char *ch = (char *) calloc(1, sizeof(char));
-
-	while ((*ch = getchar()) != '\n') {
-		strcat(string, ch);
-	}
-
-	strcpy(prod->data, string);
-
-	free(ch);
-	free(string);
+	fgets(prod->data, TAM_DATA+1, stdin);
+	prod->data[strlen(prod->data)-1]  = '\0';
 }
 
 void lerAnoProduto(Produto *prod) {
-	char *string = (char *) calloc(1, TAM_ANO * sizeof(char));
-
-	char *ch = (char *) calloc(1, sizeof(char));
-
-	while ((*ch = getchar()) != '\n') {
-		strcat(string, ch);
-	}
-
-	strcpy(prod->ano, string);
-
-	free(ch);
-	free(string);
+	fgets(prod->ano, TAM_ANO+1, stdin);
+	prod->ano[strlen(prod->ano)-1]  = '\0';
 }
 
 void lerPrecoProduto(Produto *prod) {
-	char *string = (char *) calloc(1, TAM_PRECO * sizeof(char));
-
-	char *ch = (char *) calloc(1, sizeof(char));
-
-	while ((*ch = getchar()) != '\n') {
-		strcat(string, ch);
-	}
-
-	strcpy(prod->preco, string);
-
-	free(ch);
-	free(string);
+	fgets(prod->preco, TAM_PRECO+1, stdin);
+	prod->preco[strlen(prod->preco)-1]  = '\0';
 }
 
 void lerDescontoProduto(Produto *prod) {
-	char *string = (char *) calloc(1, TAM_DESCONTO * sizeof(char));
-
-	char *ch = (char *) calloc(1, sizeof(char));
-
-	while ((*ch = getchar()) != '\n') {
-		strcat(string, ch);
-	}
-
-	strcpy(prod->desconto, string);
-
-	free(ch);
-	free(string);
+	fgets(prod->desconto, TAM_DESCONTO+1, stdin);
+	prod->desconto[strlen(prod->desconto)-1]  = '\0';
 }
 
 void lerCategoriaProduto(Produto *prod) {
-	char *string = (char *) calloc(1, TAM_CATEGORIA * sizeof(char));
-
-	char *ch = (char *) calloc(1, sizeof(char));
-
-	while ((*ch = getchar()) != '\n') {
-		strcat(string, ch);
-	}
-
-	strcpy(prod->categoria, string);
-
-	free(ch);
-	free(string);
+	fgets(prod->categoria, TAM_CATEGORIA+1, stdin);
+	prod->categoria[strlen(prod->categoria)-1]  = '\0';
 }
 
 void gerarCodigo(Produto *prod) {
