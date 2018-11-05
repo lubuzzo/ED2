@@ -372,8 +372,6 @@ void cadastrar(Indice* iprimary, Indice* ibrand) {
 
 	gravarNoArquivo(prod, iprimary, ibrand);
 
-	printf("%s\n", ARQUIVO);
-
 	free(prod);
 }
 
