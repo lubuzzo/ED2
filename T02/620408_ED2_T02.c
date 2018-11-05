@@ -225,11 +225,20 @@ void gerarCodigo(Produto *prod);
 */
 Produto recuperar_registro(int rrn);
 
-
 /*
 		Gravar produto no arquivo
 */
 void gravarNoArquivo(Produto *prod, Indice *iprimary, Indice *ibrand);
+
+/*
+		Criar árvore do indice primario
+*/
+node_Btree_ip *criar_arvore_ip();
+
+/*
+		Criar árvore do indice secundario
+*/
+node_Btree_is *criar_arvore_is();
 
 int main()
 {
@@ -492,4 +501,46 @@ Produto recuperar_registro(int rrn) {
 	strcpy(j.categoria,p);
 	gerarCodigo(&j);
 	return j;
+}
+
+node_Btree_ip *criar_arvore_ip(int ordem) {
+	node_Btree_ip *arvore = (node_Btree_ip *) malloc(sizeof(node_Btree_ip));
+
+	arvore->num_chaves = 0;
+	arvore->folha = 'F';
+	arvore->chave = calloc((ordem-1), sizeof(Chave_ip));
+	arvore->desc = calloc((ordem), sizeof(int));
+
+	return arvore;
+}
+
+node_Btree_is *criar_arvore_is(int ordem) {
+	node_Btree_is *arvore = (node_Btree_is *) malloc(sizeof(node_Btree_is));
+
+	arvore->num_chaves = 0;
+	arvore->folha = 'F';
+	arvore->chave = calloc((ordem-1), sizeof(Chave_is));
+	arvore->desc = calloc((ordem), sizeof(int));
+
+	return arvore;
+}
+
+void criar_iprimary(Indice *iprimary, int ordem) {
+	/*
+		TODO:
+			- desalocar arvore existente
+			- criar nova árvore lendo o arquivo
+	*/
+
+	node_Btree_ip arvore = criar_arvore_ip(ordem);
+}
+
+void criar_ibrand(Indice *ibrand, int ordem) {
+	/*
+		TODO:
+			- desalocar arvore existente
+			- criar nova árvore lendo o arquivo
+	*/
+
+	node_Btree_is arvore = criar_arvore_is(ordem);
 }
