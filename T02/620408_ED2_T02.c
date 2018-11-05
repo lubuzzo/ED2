@@ -225,6 +225,12 @@ void gerarCodigo(Produto *prod);
 */
 Produto recuperar_registro(int rrn);
 
+
+/*
+		Gravar produto no arquivo
+*/
+void gravarNoArquivo(Produto *prod, Indice *iprimary, Indice *ibrand);
+
 int main()
 {
 	char *p; /* # */
@@ -364,9 +370,44 @@ void cadastrar(Indice* iprimary, Indice* ibrand) {
 
 	gerarCodigo(prod);
 
-	/*gravar no arquio*/
+	gravarNoArquivo(prod, iprimary, ibrand);
+
+	printf("%s\n", ARQUIVO);
 
 	free(prod);
+}
+
+void gravarNoArquivo(Produto *prod, Indice *iprimary, Indice *ibrand) {
+	int tamanho = 0;
+
+	tamanho+=strlen(prod->pk);
+	sprintf(ARQUIVO+strlen(ARQUIVO), "%s", prod->pk);
+
+	tamanho+=(strlen(prod->nome)+1);
+	sprintf(ARQUIVO+strlen(ARQUIVO), "@%s", prod->nome);
+
+	tamanho+=(strlen(prod->marca)+1);
+	sprintf(ARQUIVO+strlen(ARQUIVO), "@%s", prod->marca);
+
+	tamanho+=(strlen(prod->data)+1);
+	sprintf(ARQUIVO+strlen(ARQUIVO), "@%s", prod->data);
+
+	tamanho+=(strlen(prod->ano)+1);
+	sprintf(ARQUIVO+strlen(ARQUIVO), "@%s", prod->ano);
+
+	tamanho+=(strlen(prod->preco)+1);
+	sprintf(ARQUIVO+strlen(ARQUIVO), "@%s", prod->preco);
+
+	tamanho+=(strlen(prod->desconto)+1);
+	sprintf(ARQUIVO+strlen(ARQUIVO), "@%s", prod->desconto);
+
+	tamanho+=(strlen(prod->categoria)+1);
+	sprintf(ARQUIVO+strlen(ARQUIVO), "@%s", prod->categoria);
+
+	while (tamanho < 192) {
+		sprintf(ARQUIVO+strlen(ARQUIVO), "#");
+		tamanho++;
+	}
 }
 
 void lerNomeProduto(Produto *prod) {
