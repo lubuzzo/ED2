@@ -240,6 +240,11 @@ node_Btree_ip *criar_arvore_ip();
 */
 node_Btree_is *criar_arvore_is();
 
+/*
+		Inicializa a árvore
+*/
+void inicializar_arvore(Indice *arvore);
+
 int main()
 {
 	char *p; /* # */
@@ -256,7 +261,7 @@ int main()
 
 	/* Índice primário */
 	Indice iprimary ;
-	/*criar_iprimary(&iprimary);*/
+	criar_iprimary(&iprimary);
 
 	/* Índice secundário de nomes dos Produtos */
 	Indice ibrand;
@@ -481,11 +486,14 @@ void gerarCodigo(Produto *prod) {
 }
 
 Produto recuperar_registro(int rrn) {
+	/*printf("%s\n", ARQUIVO);*/
 	char temp[193], *p;
 	strncpy(temp, ARQUIVO + ((rrn)*192), 192);
 	temp[192] = '\0';
 	Produto j;
 	p = strtok(temp,"@");
+	strcpy(j.pk,p);
+	p = strtok(NULL,"@");
 	strcpy(j.nome,p);
 	p = strtok(NULL,"@");
 	strcpy(j.marca,p);
@@ -499,13 +507,13 @@ Produto recuperar_registro(int rrn) {
 	strcpy(j.desconto,p);
 	p = strtok(NULL,"@");
 	strcpy(j.categoria,p);
-	gerarCodigo(&j);
+	/*gerarCodigo(&j);*/
 	return j;
 }
 
 void *criar_no(char ip) {
 		if (ip == 'p') {
-			node_Btree_ip *arvore = (node_Btree_ip *) malloc(sizeof(node_Btree_ip));
+			node_Btree_ip *arvore = malloc(sizeof(node_Btree_ip));
 
 			arvore->num_chaves = 0;
 			arvore->folha = 'F';
@@ -514,7 +522,7 @@ void *criar_no(char ip) {
 
 			return arvore;
 		} else if (ip == 's') {
-			node_Btree_is *arvore = (node_Btree_is *) malloc(sizeof(node_Btree_is));
+			node_Btree_is *arvore = malloc(sizeof(node_Btree_is));
 
 			arvore->num_chaves = 0;
 			arvore->folha = 'F';
@@ -527,22 +535,79 @@ void *criar_no(char ip) {
 }
 
 node_Btree_ip *criar_arvore_ip(int ordem) {
-
+	return NULL;
 }
 
 
 node_Btree_is *criar_arvore_is(int ordem) {
+	return NULL;
+}
 
+void inicializar_arvore(Indice *arvore) {
+	arvore->raiz = -1;
+}
+
+void insere_ip(Indice *indice, Chave_ip *ip) {
+	int tamanho = 0;
+	node_Btree_ip *aux;
+	int count = 0;
+
+	if( indice->raiz == -1 ){
+		aux = criar_no('p');
+		aux->folha = 'F';
+		aux->num_chaves = 1;
+		aux->chave[0] = *ip;
+
+		/*Vai estar na primeira posição*/
+		indice->raiz = 1;
+
+		tamanho+=3;
+		sprintf(ARQUIVO_IP+strlen(ARQUIVO_IP), "%s", "001");
+
+		tamanho+=strlen(ip->pk);
+		sprintf(ARQUIVO_IP+strlen(ARQUIVO_IP), "%s", ip->pk);
+
+		tamanho+=(sizeof(ip->rrn)/4);
+		sprintf(ARQUIVO_IP+strlen(ARQUIVO_IP), "%.4d", ip->rrn);
+
+		/*É folha, pode, garantidamente, preecher com '#'*/
+		for (count = 14; count < ((ordem_ip - 1) * 14); count++) {
+			tamanho+=1;
+			sprintf(ARQUIVO_IP+strlen(ARQUIVO_IP), "%s", "#");
+		}
+
+		tamanho+=1;
+		sprintf(ARQUIVO_IP+strlen(ARQUIVO_IP), "%s", "F");
+
+		/*É folha, pode, garantidamente, preecher com '*'*/
+		for (count = 0; count < (ordem_ip * 3); count++) {
+			tamanho+=1;
+			sprintf(ARQUIVO_IP+strlen(ARQUIVO_IP), "%s", "*");
+		}
+
+	} else {
+
+	}
 }
 
 void criar_iprimary(Indice *iprimary) {
-	/*
-		TODO:
-			- desalocar arvore existente
-			- criar nova árvore lendo o arquivo
-	*/
+	Produto p;
+	int count;
+	Chave_ip ip;
+	inicializar_arvore(iprimary);
 
-	/*node_Btree_ip arvore = criar_arvore_ip(ordem_ip); */
+	for (count = 0; count < nregistros; count++) {
+		p = recuperar_registro(count);
+		strcpy(ip.pk, p.pk);
+		/*
+			printf("Produto nome = %s\n", p.nome);
+			printf("Produto marca = %s\n", p.marca);
+			printf("%s\n", ip.pk);
+		*/
+		ip.rrn = count;
+		insere_ip(iprimary, &ip);
+	}
+	printf("%s\n", ARQUIVO_IP);
 }
 
 void criar_ibrand(Indice *ibrand) {
