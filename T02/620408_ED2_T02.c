@@ -503,44 +503,54 @@ Produto recuperar_registro(int rrn) {
 	return j;
 }
 
-node_Btree_ip *criar_arvore_ip(int ordem) {
-	node_Btree_ip *arvore = (node_Btree_ip *) malloc(sizeof(node_Btree_ip));
+void *criar_no(char ip) {
+		if (ip == 'p') {
+			node_Btree_ip *arvore = (node_Btree_ip *) malloc(sizeof(node_Btree_ip));
 
-	arvore->num_chaves = 0;
-	arvore->folha = 'F';
-	arvore->chave = calloc((ordem-1), sizeof(Chave_ip));
-	arvore->desc = calloc((ordem), sizeof(int));
+			arvore->num_chaves = 0;
+			arvore->folha = 'F';
+			arvore->chave = calloc((ordem_ip-1), sizeof(Chave_ip));
+			arvore->desc = calloc((ordem_ip), sizeof(int));
 
-	return arvore;
+			return arvore;
+		} else if (ip == 's') {
+			node_Btree_is *arvore = (node_Btree_is *) malloc(sizeof(node_Btree_is));
+
+			arvore->num_chaves = 0;
+			arvore->folha = 'F';
+			arvore->chave = calloc((ordem_is-1), sizeof(Chave_is));
+			arvore->desc = calloc((ordem_is), sizeof(int));
+
+			return arvore;
+		}
+		return NULL;
 }
+
+node_Btree_ip *criar_arvore_ip(int ordem) {
+
+}
+
 
 node_Btree_is *criar_arvore_is(int ordem) {
-	node_Btree_is *arvore = (node_Btree_is *) malloc(sizeof(node_Btree_is));
 
-	arvore->num_chaves = 0;
-	arvore->folha = 'F';
-	arvore->chave = calloc((ordem-1), sizeof(Chave_is));
-	arvore->desc = calloc((ordem), sizeof(int));
-
-	return arvore;
 }
 
-void criar_iprimary(Indice *iprimary, int ordem) {
+void criar_iprimary(Indice *iprimary) {
 	/*
 		TODO:
 			- desalocar arvore existente
 			- criar nova árvore lendo o arquivo
 	*/
 
-	node_Btree_ip arvore = criar_arvore_ip(ordem);
+	/*node_Btree_ip arvore = criar_arvore_ip(ordem_ip); */
 }
 
-void criar_ibrand(Indice *ibrand, int ordem) {
+void criar_ibrand(Indice *ibrand) {
 	/*
 		TODO:
 			- desalocar arvore existente
 			- criar nova árvore lendo o arquivo
 	*/
 
-	node_Btree_is arvore = criar_arvore_is(ordem);
+	/*node_Btree_is arvore = criar_arvore_is(ordem_is); */
 }
