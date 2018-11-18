@@ -246,6 +246,12 @@ int min(int x, int y) {
 	return x;
 }
 
+/*
+		insere uma chave no iprimary
+*/
+void insere_ip(Indice *indice, Chave_ip *ip);
+
+
 int main()
 {
 	char *p; /* # */
@@ -376,6 +382,7 @@ int exibir_registro(int rrn)
 
 void cadastrar(Indice* iprimary, Indice* ibrand) {
 	Produto *prod = (Produto *) calloc(1,sizeof(Produto));
+	Chave_ip *chave_ip;
 
 	lerNomeProduto(prod);
 	lerMarcaProduto(prod);
@@ -389,7 +396,15 @@ void cadastrar(Indice* iprimary, Indice* ibrand) {
 
 	gravarNoArquivo(prod, iprimary, ibrand);
 
+	chave_ip = (Chave_ip *) calloc(1, sizeof(Chave_ip));
+	strcpy(chave_ip->pk, prod->pk);
+	chave_ip->rrn = nregistros;
+
+	insere_ip(iprimary, chave_ip);
+	nregistros++;
+
 	free(prod);
+	free(chave_ip);
 }
 
 void gravarNoArquivo(Produto *prod, Indice *iprimary, Indice *ibrand) {
