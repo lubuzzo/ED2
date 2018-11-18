@@ -514,6 +514,44 @@ Produto recuperar_registro(int rrn) {
 	return j;
 }
 
+void write_btree_ip(node_Btree_ip *salvar, int rrn) {
+	int tamanho; /* Quantidade escrita */
+	int size; /* Tamanho do indice */
+	int count;
+	size = ( 3 + (ordem_ip * 14) + 1 + (ordem_ip * 3) );
+	tamanho = 0;
+
+	tamanho+=3;
+	sprintf(ARQUIVO_IP+(rrn*size), "%.3d", salvar->num_chaves);
+
+	for(count = 0; count < salvar->num_chaves; count++) {
+		tamanho+=TAM_PRIMARY_KEY;
+		sprintf(ARQUIVO_IP+strlen(ARQUIVO_IP), "%s", salvar->chave[count].pk);
+
+		tamanho+=4;
+		sprintf(ARQUIVO_IP+strlen(ARQUIVO_IP), "%.4d", salvar->chave[count].rrn);
+	}
+
+	if (salvar->folha == 'F') {
+		/*É folha, pode, garantidamente, preecher com '#'*/
+		for (count = tamanho; count < ((ordem_ip - 1) * 14); count++) {
+			tamanho+=1;
+			sprintf(ARQUIVO_IP+strlen(ARQUIVO_IP), "%s", "#");
+		}
+	}
+
+	tamanho+=1;
+	sprintf(ARQUIVO_IP+strlen(ARQUIVO_IP), "%c", salvar->folha);
+
+	if (salvar->folha == 'F') {
+		/*É folha, pode, garantidamente, preecher com '*'*/
+		for (count = 0; count < (ordem_ip * 3); count++) {
+			tamanho+=1;
+			sprintf(ARQUIVO_IP+strlen(ARQUIVO_IP), "%s", "*");
+		}
+	}
+}
+
 node_Btree_ip *read_btree_ip(int rrn) {
 	node_Btree_ip *no;
 	int tamanho;
@@ -531,6 +569,7 @@ node_Btree_ip *read_btree_ip(int rrn) {
 	no = calloc(1, sizeof(node_Btree_ip));
 
 	strncpy(num_chaves, temp, 3);
+	num_chaves[3] = '\0';
 	no->num_chaves = atoi(num_chaves);
 
 	no->chave = (Chave_ip *) calloc(ordem_ip - 1, sizeof(Chave_ip));
@@ -576,7 +615,6 @@ void *inicializar_arvore(Indice *arvore, char ip) {
 }
 
 void insere_ip(Indice *indice, Chave_ip *ip) {
-	int tamanho = 0;
 	int count = 0;
 	node_Btree_ip *aux;
 	/*struct auxiliar_ip *ret_funcoes;*/
@@ -595,6 +633,7 @@ void insere_ip(Indice *indice, Chave_ip *ip) {
 		*/
 
 		nregistrosip = 1;
+		write_btree_ip(aux, 0);
 	} else {
 
 		aux = read_btree_ip(indice->raiz);
@@ -607,40 +646,14 @@ void insere_ip(Indice *indice, Chave_ip *ip) {
 					aux->chave[count] = aux->chave[count-1];
 				} else {
 					aux->chave[count] = *ip;
-					aux->num_chaves++;
+					aux->folha = 'F';
+					aux->num_chaves+=1;
 					nregistrosip++;
 					break;
 				}
 			}
 		}
-	}
-
-	tamanho+=3;
-	sprintf(ARQUIVO_IP, "%.3d", aux->num_chaves);
-
-	for(count = 0; count < aux->num_chaves; count++) {
-		tamanho+=TAM_PRIMARY_KEY;
-		sprintf(ARQUIVO_IP+strlen(ARQUIVO_IP), "%s", aux->chave[count].pk);
-
-		tamanho+=4;
-		sprintf(ARQUIVO_IP+strlen(ARQUIVO_IP), "%.4d", aux->chave[count].rrn);
-	}
-
-
-
-	/*É folha, pode, garantidamente, preecher com '#'*/
-	for (count = tamanho; count < ((ordem_ip - 1) * 14); count++) {
-		tamanho+=1;
-		sprintf(ARQUIVO_IP+strlen(ARQUIVO_IP), "%s", "#");
-	}
-
-	tamanho+=1;
-	sprintf(ARQUIVO_IP+strlen(ARQUIVO_IP), "%s", "F");
-
-	/*É folha, pode, garantidamente, preecher com '*'*/
-	for (count = 0; count < (ordem_ip * 3); count++) {
-		tamanho+=1;
-		sprintf(ARQUIVO_IP+strlen(ARQUIVO_IP), "%s", "*");
+		write_btree_ip(aux, 0);
 	}
 }
 
